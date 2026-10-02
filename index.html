@@ -4,12 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rovalis – Tuleohutusvarustuse kontroll</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script>if(typeof jsQR==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"><\/scr'+'ipt>');}</script>
-<script>if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<meta name="theme-color" content="#1c63b7">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rovalis">
+<script src="lib/xlsx.full.min.js"></script>
+<script src="lib/pdf.min.js"></script>
+<script src="lib/qrcode.min.js"></script>
+<script src="lib/jsQR.js"></script>
+<script>if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';</script>
 <style>
   :root{
     --sinine:#1c63b7;
@@ -58,8 +65,34 @@
   .nupp .marki{width:54px; height:54px; border-radius:8px; box-shadow:0 0 0 2px #fff; display:block;}
   .skann{width:100%; margin-top:18px; background:var(--tume); flex-direction:row; justify-content:center; padding:32px; font-size:1.8rem; letter-spacing:1px; border-radius:18px;}
   #skannVaade{position:fixed; inset:0; background:#000; display:none; flex-direction:column; z-index:30;}
-  #skannVaade video{flex:1; object-fit:cover; width:100%;}
-  #skannVaade button{position:absolute; top:12px; right:12px; border:none; background:var(--punane); color:#fff; border-radius:8px; padding:10px 16px; font-weight:700; cursor:pointer;}
+  #skannVaade video{flex:1; object-fit:cover; width:100%; height:100%;}
+  #skannKiht{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .skannRaam{position:absolute; left:50%; top:45%; width:min(70vw,70vh,340px); aspect-ratio:1; transform:translate(-50%,-50%);
+    border-radius:18px; box-shadow:0 0 0 200vmax rgba(0,0,0,.55); overflow:hidden; pointer-events:none; transition:box-shadow .2s;}
+  .skannRaam i{position:absolute; width:42px; height:42px; border:5px solid #fff; transition:border-color .15s;}
+  .skannRaam i:nth-child(1){top:0; left:0; border-right:none; border-bottom:none; border-top-left-radius:18px;}
+  .skannRaam i:nth-child(2){top:0; right:0; border-left:none; border-bottom:none; border-top-right-radius:18px;}
+  .skannRaam i:nth-child(3){bottom:0; left:0; border-right:none; border-top:none; border-bottom-left-radius:18px;}
+  .skannRaam i:nth-child(4){bottom:0; right:0; border-left:none; border-top:none; border-bottom-right-radius:18px;}
+  .skannJoon{position:absolute; left:6%; right:6%; height:3px; top:0; border-radius:3px;
+    background:linear-gradient(90deg,transparent,#ff3b3b 20%,#ff3b3b 80%,transparent); box-shadow:0 0 12px 3px rgba(255,59,59,.7);
+    animation:skannLiigu 1.8s ease-in-out infinite alternate;}
+  @keyframes skannLiigu{from{top:4%;} to{top:96%;}}
+  .skannRaam.leitud i{border-color:#2ecc40;}
+  .skannRaam.leitud{box-shadow:0 0 0 200vmax rgba(0,0,0,.7), inset 0 0 0 4px #2ecc40;}
+  .skannRaam.leitud .skannJoon{display:none;}
+  .skannRaam.leitud::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:7rem; font-weight:900; color:#2ecc40; text-shadow:0 2px 12px rgba(0,0,0,.6); animation:skannPop .25s ease-out;}
+  @keyframes skannPop{from{transform:scale(.4); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .skannTekst{position:absolute; left:16px; right:16px; top:calc(45% + min(35vw,35vh,170px) + 22px); text-align:center; color:#fff;
+    font-size:1.1rem; font-weight:600; text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .skannTekst.leitud{color:#2ecc40; font-size:1.5rem; font-weight:800;}
+  .skannTekst .vihje{display:block; margin-top:6px; font-size:.9rem; font-weight:400; opacity:.85;}
+  .skannNupud{position:absolute; left:0; right:0; bottom:max(24px,env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:14px; padding:0 16px;}
+  .skannNupud button{border:none; border-radius:30px; padding:14px 22px; font-size:1rem; font-weight:700; cursor:pointer;
+    background:rgba(255,255,255,.18); color:#fff; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);}
+  .skannNupud button.sulge{background:var(--punane);}
+  .skannNupud button.sees{background:#ffd43b; color:#222;}
   .jalus{margin-top:18px; text-align:center; font-size:.78rem; color:var(--tume); font-weight:600; text-shadow:0 0 4px #fff;}
   #plaanVaade{position:fixed; inset:0; background:#f2f6fb; display:none; flex-direction:column; z-index:10;}
   #plaanVaade header{display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--tume); color:#fff;}
@@ -191,7 +224,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 16.07.2026-F</div>
+    <div class="jalus">Rovalis OÜ · versioon 02.10.2026-PWA</div>
   </div>
 </div>
 
@@ -248,7 +281,13 @@
 
 <div id="skannVaade">
   <video id="skannVideo" autoplay playsinline muted></video>
-  <button onclick="sulgeSkann()">Sulge ✕</button>
+  <canvas id="skannKiht"></canvas>
+  <div class="skannRaam" id="skannRaam"><i></i><i></i><i></i><i></i><div class="skannJoon"></div></div>
+  <div class="skannTekst" id="skannTekst">Suuna kaamera QR-koodile</div>
+  <div class="skannNupud">
+    <button id="skannLamp" style="display:none" onclick="lylitaLamp()">🔦 Taskulamp</button>
+    <button class="sulge" onclick="sulgeSkann()">Sulge ✕</button>
+  </div>
 </div>
 <input type="file" id="skannFoto" accept="image/*" capture="environment" style="display:none">
 
@@ -895,55 +934,151 @@ document.getElementById('failImport').addEventListener('change', e=>{
   r.readAsArrayBuffer(f);
 });
 
-let skannVoog=null, skannTimer=null;
-/* loe kood videokaadrist või pildist: eelista brauseri BarcodeDetectorit, varuks jsQR (iPhone) */
-async function loeKoodPildilt(allikas, laius, korgus){
-  if('BarcodeDetector' in window){
+let skannVoog=null, skannTimer=null, skannTootab=false, skannLeitud=false, skannAlgus=0, lampSees=false, heliKont=null, koodiDetektor=null;
+/* brauseri sisseehitatud lugeja (Android Chrome); iPhone'is kasutatakse jsQR-i */
+function koodiLugeja(){
+  if(koodiDetektor===null){
+    koodiDetektor=false;
+    if('BarcodeDetector' in window){
+      try{ koodiDetektor=new BarcodeDetector({formats:['qr_code','code_128','ean_13']}); }catch(e){ koodiDetektor=false; }
+    }
+  }
+  return koodiDetektor;
+}
+/* loe kood: tagastab {data, punktid:[{x,y}..]} allika koordinaatides või null */
+async function loeKoodTapsemalt(allikas, laius, korgus){
+  const det=koodiLugeja();
+  if(det){
     try{
-      const det=new BarcodeDetector({formats:['qr_code','code_128','ean_13']});
       const k=await det.detect(allikas);
-      if(k.length) return k[0].rawValue;
+      if(k.length) return {data:k[0].rawValue, punktid:k[0].cornerPoints||[]};
       return null;
     }catch(e){}
   }
   if(typeof jsQR!=='undefined'){
-    const c=document.createElement('canvas');
-    c.width=laius; c.height=korgus;
-    const ctx=c.getContext('2d');
-    ctx.drawImage(allikas,0,0,laius,korgus);
-    const d=ctx.getImageData(0,0,laius,korgus);
-    const k=jsQR(d.data, laius, korgus);
-    return k?k.data:null;
+    /* vähenda kaadrit kiiruse huvides (max 900 px pikem külg) */
+    const sk=Math.min(1, 900/Math.max(laius,korgus));
+    const w=Math.round(laius*sk), h=Math.round(korgus*sk);
+    const c=loeKoodTapsemalt.c||(loeKoodTapsemalt.c=document.createElement('canvas'));
+    c.width=w; c.height=h;
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(allikas,0,0,w,h);
+    const d=ctx.getImageData(0,0,w,h);
+    const k=jsQR(d.data, w, h, {inversionAttempts:'attemptBoth'});
+    if(!k) return null;
+    const L=k.location, p=q=>({x:q.x/sk, y:q.y/sk});
+    return {data:k.data, punktid:[p(L.topLeftCorner),p(L.topRightCorner),p(L.bottomRightCorner),p(L.bottomLeftCorner)]};
   }
   return null;
 }
+async function loeKoodPildilt(allikas, laius, korgus){
+  const k=await loeKoodTapsemalt(allikas, laius, korgus);
+  return k?k.data:null;
+}
+/* lühike piiks (töötab Androidis ja iPhone'is, kui telefon pole hääletu režiimis) */
+function piiks(){
+  try{
+    if(!heliKont) return;
+    const o=heliKont.createOscillator(), g=heliKont.createGain();
+    o.type='sine'; o.frequency.value=1150;
+    g.gain.setValueAtTime(0.0001,heliKont.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.35,heliKont.currentTime+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,heliKont.currentTime+0.16);
+    o.connect(g).connect(heliKont.destination);
+    o.start(); o.stop(heliKont.currentTime+0.18);
+  }catch(e){}
+}
+/* joonista leitud koodi ümber roheline raam (video on object-fit:cover) */
+function joonistaKoodiRaam(punktid){
+  const v=document.getElementById('skannVideo'), c=document.getElementById('skannKiht');
+  const W=c.clientWidth, H=c.clientHeight, dpr=window.devicePixelRatio||1;
+  c.width=W*dpr; c.height=H*dpr;
+  const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  if(!punktid||punktid.length<3||!v.videoWidth) return;
+  const sk=Math.max(W/v.videoWidth, H/v.videoHeight);
+  const dx=(W-v.videoWidth*sk)/2, dy=(H-v.videoHeight*sk)/2;
+  ctx.beginPath();
+  punktid.forEach((p,i)=>{ const x=p.x*sk+dx, y=p.y*sk+dy; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.closePath();
+  ctx.lineWidth=6; ctx.strokeStyle='#2ecc40'; ctx.lineJoin='round';
+  ctx.fillStyle='rgba(46,204,64,.25)'; ctx.fill(); ctx.stroke();
+}
+function skannTekst(t, klass, vihje){
+  const e=document.getElementById('skannTekst');
+  e.className='skannTekst'+(klass?' '+klass:'');
+  e.textContent=t;
+  if(vihje){ const s=document.createElement('span'); s.className='vihje'; s.textContent=vihje; e.appendChild(s); }
+}
+async function lylitaLamp(){
+  if(!skannVoog) return;
+  const tr=skannVoog.getVideoTracks()[0];
+  try{
+    lampSees=!lampSees;
+    await tr.applyConstraints({advanced:[{torch:lampSees}]});
+    document.getElementById('skannLamp').classList.toggle('sees',lampSees);
+  }catch(e){ lampSees=false; teade('Taskulampi ei saa selles telefonis sisse lülitada'); }
+}
 async function skanneeri(){
-  if(!('BarcodeDetector' in window) && typeof jsQR==='undefined'){
-    teade('Skänner vajab internetiühendust (lugemisteek laadimata)');
+  if(!koodiLugeja() && typeof jsQR==='undefined'){
+    teade('Skänner ei leia lugemisteeki – ava äpp korra internetiga');
     return;
   }
+  /* heli lubamine peab toimuma kohe nupuvajutusel (iPhone) */
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(AC){ if(!heliKont) heliKont=new AC(); if(heliKont.state==='suspended') heliKont.resume(); }
+  }catch(e){}
   try{
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('pole');
-    skannVoog=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    skannVoog=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}}});
   }catch(e){
     /* varuvariant: tee foto ja loe kood pildilt (töötab ka failist avatud äpis) */
     teade('Otse-kaamerat ei saa – teen foto kaudu');
     document.getElementById('skannFoto').click();
     return;
   }
+  const tr=skannVoog.getVideoTracks()[0];
+  /* pidev teravustamine, kui telefon seda toetab */
+  try{ const cap=tr.getCapabilities?tr.getCapabilities():{};
+    if(cap.focusMode&&cap.focusMode.includes('continuous')) tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});
+    lampSees=false;
+    const lamp=document.getElementById('skannLamp');
+    lamp.classList.remove('sees');
+    lamp.style.display=cap.torch?'':'none';
+  }catch(e){}
   const v=document.getElementById('skannVideo');
   v.srcObject=skannVoog;
+  try{ await v.play(); }catch(e){}
+  skannLeitud=false; skannAlgus=Date.now();
+  document.getElementById('skannRaam').classList.remove('leitud');
+  joonistaKoodiRaam(null);
+  skannTekst('Suuna kaamera QR-koodile');
   document.getElementById('skannVaade').style.display='flex';
-  skannTimer=setInterval(async ()=>{
-    try{
-      if(!v.videoWidth) return;
-      const kood=await loeKoodPildilt(v, v.videoWidth, v.videoHeight);
-      if(kood){
-        sulgeSkann();
-        leiaKoodiga(kood);
-      }
-    }catch(e){}
-  }, 400);
+  const samm=async ()=>{
+    if(!skannVoog || skannLeitud) return;
+    if(!skannTootab && v.videoWidth){
+      skannTootab=true;
+      try{
+        const k=await loeKoodTapsemalt(v, v.videoWidth, v.videoHeight);
+        if(k && k.data && skannVoog && !skannLeitud){
+          skannLeitud=true;
+          joonistaKoodiRaam(k.punktid);
+          document.getElementById('skannRaam').classList.add('leitud');
+          skannTekst('✓ '+k.data, 'leitud');
+          try{ if(navigator.vibrate) navigator.vibrate(120); }catch(e){}
+          piiks();
+          setTimeout(()=>{ sulgeSkann(); leiaKoodiga(k.data); }, 650);
+          skannTootab=false;
+          return;
+        }
+      }catch(e){}
+      skannTootab=false;
+      if(Date.now()-skannAlgus>8000 && !skannLeitud)
+        skannTekst('Otsin koodi…', '', 'Mine lähemale, hoia telefoni paigal'+(document.getElementById('skannLamp').style.display===''?' või lülita taskulamp sisse':''));
+    }
+    skannTimer=setTimeout(samm, 120);
+  };
+  samm();
 }
 function leiaKoodiga(kood){
   const norm=s=>String(s).toUpperCase().replace(/\s+/g,'');
@@ -1032,9 +1167,20 @@ document.getElementById('skannFoto').addEventListener('change', async e=>{
 });
 
 function sulgeSkann(){
-  if(skannTimer){ clearInterval(skannTimer); skannTimer=null; }
+  if(skannTimer){ clearTimeout(skannTimer); skannTimer=null; }
   if(skannVoog){ skannVoog.getTracks().forEach(t=>t.stop()); skannVoog=null; }
+  lampSees=false;
   document.getElementById('skannVaade').style.display='none';
+}
+
+/* PWA: võrguta töö + palu brauserilt, et andmeid ei kustutataks */
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW:',e));
+  });
+}
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persisted().then(p=>{ if(!p) navigator.storage.persist(); }).catch(()=>{});
 }
 </script>
 </body>
