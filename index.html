@@ -286,7 +286,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 02.10.2026-T</div>
+    <div class="jalus">Rovalis OÜ · versioon 02.10.2026-V</div>
   </div>
 </div>
 
@@ -605,6 +605,12 @@ async function kontrolliEnneSalvestust(){
   const tana=new Date(), kv=kvartaliNr(tana);
   const T={tekst:'Pane tänane kuupäev ja salvesta', klass:'roheline', vaartus:'tana'};
   const B={tekst:'Tagasi', vaartus:null};
+  /* puudus vajab alati kirjeldust */
+  if(vormOlek==='puudus' && !document.getElementById('vMarkus').value.trim()){
+    await kysi('Kirjelda puudust!', 'Olek on „Puudus“, aga märkus on tühi. Vali kiirnupp või kirjuta, mis on puudu.', [B]);
+    document.getElementById('vMarkus').focus();
+    return null;
+  }
   if(v && kuupLoe(v)>tana)
     return await kysi('Kontrolli vaatluse kuupäeva!', 'Kvartaalse vaatluse kuupäev '+kpEst(v)+' on tulevikus.', [T,B]);
   if(vormOlek && (!v || kvartaliNr(kuupLoe(v))!==kv)){
@@ -1572,7 +1578,7 @@ let vormOlek='', vormAlg=null, vormEelmine='';
 const PUUDUSED={
   tk:['Puudub','Katki','Ligipääs takistatud','Tähistus','Rõhk madal'],
   ttv:['Puudub','Katki / lekib','Ligipääs takistatud','Kapp ei avane','Tähistus'],
-  uks:['Avatud / kiilutud lahti','Puudub','Katki','Tihend kahjustatud','Ligipääs takistatud','Tähistus']
+  uks:['Avatud / kiilutud lahti','Puudub','Katki','Sulgur katki','Sulus katki','Tihend kahjustatud','Ligipääs takistatud','Tähistus']
 };
 /* märkus = komadega eraldatud puudused; kiirnupp lisab/eemaldab oma puuduse */
 function markuseOsad(t){ return String(t||'').split(',').map(x=>x.trim()).filter(Boolean); }
