@@ -442,7 +442,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 04.10.2026-W</div>
+    <div class="jalus">Rovalis OÜ · versioon 04.10.2026-X</div>
   </div>
 </div>
 
@@ -2761,7 +2761,7 @@ function renderPaigutus(){
     ch.appendChild(b);
   });
   const u=document.createElement('button'); u.type='button'; u.className='chip uus'+(paigutus.uus?' v':''); u.textContent='+ Uus '+({tk:'kustuti',ttv:'voolik',uks:'uks'}[skeemiTyyp]||'seade')+' (pole nimekirjas)';
-  u.onclick=()=>{ paigutus.uus=!paigutus.uus; paigutus.valitud=null; paigutus.liiguta=null; renderPaigutus(); };
+  u.onclick=()=>{ paigutus.uus=true; paigutus.valitud=null; paigutus.liiguta=null; renderPaigutus(); };
   ch.appendChild(u);
   const v=document.getElementById('ppVihje');
   if(paigutus.noolLohe) v.innerHTML='Tõmba <b>'+esc(paigutus.noolLohe)+'</b> märki näpuga uude kohta – noole ots jääb kustuti kohale.';
