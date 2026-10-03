@@ -319,7 +319,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-I</div>
+    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-J</div>
   </div>
 </div>
 
@@ -1995,8 +1995,16 @@ async function looAruanne(){
   const info=MAJA_INFO[m]||{};
   const majaNimi=document.querySelector('#maja option:checked').textContent;
   const varv='#'+L.varv.slice(2);
+  /* kastid selle kvartali järgi: puudus = Puudus-olek; korras = sel kvartalil vaadeldud ja Korras; muu = vaatlemata */
+  const kvNyyd=kvartaliNr(new Date());
   let korras=0, puudus=0, mark=0;
-  list.forEach(s=>{ const o=olekJaMarkus(s).olek; if(o==='korras') korras++; else if(o==='puudus') puudus++; else mark++; });
+  list.forEach(s=>{
+    const o=olekJaMarkus(s).olek;
+    const selKv=!!s.vaatlus && kvartaliNr(kuupLoe(s.vaatlus))===kvNyyd;
+    if(o==='puudus') puudus++;
+    else if(o==='korras' && selKv) korras++;
+    else mark++;
+  });
   /* puudused koos fotodega */
   let pd='';
   for(const s of list){
@@ -2033,10 +2041,10 @@ async function looAruanne(){
     +'<h1>'+esc(info.firma||majaNimi)+'</h1><div class="adr">'+esc(info.aadress||'')+'</div>'
     +'<h2>'+esc(L.pealkiri)+' – aruanne</h2>'
     +'<div class="meta"><span>Teostaja: ______________________</span><span>Seisuga: '+tanane()+'</span></div>'
-    +'<div class="kok"><div class="kk ok"><span>'+korras+'</span>korras</div><div class="kk pu"><span>'+puudus+'</span>'+(puudus===1?'puudus':'puudust')+'</div><div class="kk ma"><span>'+mark+'</span>olek märkimata</div></div>'
+    +'<div class="kok"><div class="kk ok"><span>'+korras+'</span>korras</div><div class="kk pu"><span>'+puudus+'</span>'+(puudus===1?'puudus':'puudust')+'</div><div class="kk ma"><span>'+mark+'</span>vaatlemata</div></div>'
     +'<h3>Puudused</h3>'+(pd||'<p class="muu">Puudusi ei ole.</p>')
     +'<h3>Kõik seadmed ('+list.length+')</h3><table><thead><tr>'+L.paised.map(t=>'<th>'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rid+'</tbody></table>'
-    +'<div class="leg">Punane – tähtaeg möödas, puudub või puudus. Kollane – tähtaeg läheneb, vaatlus eelmises kvartalis või olek märkimata.</div>'
+    +'<div class="leg">Kokkuvõte arvestab käesolevat kvartalit: „korras“ = sel kvartalil vaadeldud ja korras, „vaatlemata“ = sel kvartalil veel vaatlemata. Tabelis: punane – tähtaeg möödas, puudub või puudus; kollane – tähtaeg läheneb, eelmise kvartali vaatlus või olek märkimata.</div>'
     +'<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>';
   aken.document.open(); aken.document.write(html); aken.document.close();
 }
