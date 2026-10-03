@@ -276,8 +276,11 @@
   .siOk{background:#e3f6e9; color:#137a33; border-radius:10px; padding:8px 10px; font-size:.88rem; font-weight:600; margin-top:10px;}
   .siHoiatus{background:#fff4cc; color:#7a5600; border-radius:10px; padding:8px 10px; font-size:.85rem; font-weight:600; margin-top:8px;}
   #plaanKiht{container-type:size;}
+  #plaanKiht .ots{position:absolute; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%; border:2px dashed #1c63b7; background:rgba(28,99,183,.12); box-sizing:border-box; display:none; z-index:0; touch-action:none;}
+  #plaanVaade.paigutus #plaanKiht .ots{display:block; pointer-events:auto; cursor:grab;}
+  #plaanKiht[data-filter=punane] .ots:not(.punane), #plaanKiht[data-filter=roheline] .ots:not(.roheline){display:none!important;}
   #plaanKiht svg.nooled{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none;}
-  #plaanKiht .silt.oma{transform:translate(-50%,-50%); display:flex; align-items:center; gap:.25em; padding:.12em .4em .12em .12em; border-radius:.35em; border-width:2px; font-weight:800; white-space:nowrap; line-height:1; font-size:max(8px, calc(var(--s,1) * var(--f,.81) * 1cqw)); background:#fff; z-index:1;}
+  #plaanKiht .silt.oma{transform:translate(-50%,-50%); display:flex; align-items:center; padding:.18em .4em; border-radius:.3em; border-width:2px; font-weight:800; white-space:nowrap; line-height:1; font-size:max(9px, calc(var(--s,1) * var(--f,.81) * 1cqw)); background:#fff; z-index:1;}
   #plaanKiht .silt.oma img{width:max(14px, calc(var(--s,1) * var(--f,.81) * 2.2cqw)); height:max(14px, calc(var(--s,1) * var(--f,.81) * 2.2cqw)); border-radius:.2em; display:block;}
   #plaanKiht .silt.oma.punane{background:#fde8e8; color:#9b1c1c;}
   #plaanKiht .silt.oma.kollane{background:#fff6d6; color:#6d4c00;}
@@ -405,7 +408,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-N</div>
+    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-O</div>
   </div>
 </div>
 
@@ -1150,7 +1153,7 @@ function kattuvaidMarke(){
   const S=seadmeSkeem(); if(!S) return 0;
   const j=vaikeLeht(pk(),aktiivneLeht), f=margiCqw(S,j)*Math.max(1,S.suurus||1);
   const r=Object.entries(S.sildid).filter(([k,a])=>a[0]===j&&a[7]).map(([k,a])=>{
-    const cx=a[1]/S.laius*100, cy=a[2]/S.laius*100, w=f*(3+0.62*k.length)/2, h=f*2.44/2;
+    const cx=a[1]/S.laius*100, cy=a[2]/S.laius*100, w=f*(0.9+0.62*k.length)/2, h=f*1.4/2;
     return {left:cx-w,right:cx+w,top:cy-h,bottom:cy+h}; });
   let n=0; for(let i=0;i<r.length;i++) for(let k=i+1;k<r.length;k++){ const a=r[i],b=r[k];
     if(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom) n++; }
@@ -1180,8 +1183,12 @@ function joonistaSildid(){
       /* oma silt: ikoon + nimi, keskpunkt (a1,a2), seadme koht (a5,a6) */
       d.classList.add('oma');
       d.dataset.tx=a[5]/S.laius*100; d.dataset.ty=a[6]/K*100; d.dataset.v=v;
-      d.innerHTML='<img src="'+liigiIkoon(l.ty)+'" alt=""><span></span>';
+      d.innerHTML='<span></span>';
       d.querySelector('span').textContent=kood;
+      /* noole ots (seadme täpne koht) – paigutamisel lohistatav */
+      const o=document.createElement('div'); o.className='ots '+v; o.dataset.kood=kood;
+      o.style.left=d.dataset.tx+'%'; o.style.top=d.dataset.ty+'%';
+      kiht.appendChild(o);
     }else{
       d.style.width=(a[3]/S.laius*100)+'%';
       d.style.height=(a[4]/K*100)+'%';
@@ -2503,7 +2510,12 @@ function joonistaNooled(){
     const varv=NOOLE_VARV[d.dataset.v]||'#d22b2b';
     if(tx>=x0-3&&tx<=x1+3&&ty>=y0-3&&ty<=y1+3) return;   /* märk on oma kohal – noolt pole vaja */
     const cx=Math.max(x0,Math.min(x1,tx)), cy=Math.max(y0,Math.min(y1,ty));
-    svg.insertAdjacentHTML('beforeend','<line x1="'+cx+'" y1="'+cy+'" x2="'+tx+'" y2="'+ty+'" stroke="'+varv+'" stroke-width="2.5" stroke-linecap="round"/><circle cx="'+tx+'" cy="'+ty+'" r="4.5" fill="'+varv+'" stroke="#fff" stroke-width="1.5"/>');
+    /* väike nooleots seadme kohal */
+    const fs=parseFloat(getComputedStyle(d).fontSize)||10, L=Math.max(7,fs*0.9), B=L*0.45;
+    const dx=tx-cx, dy=ty-cy, len=Math.hypot(dx,dy)||1, ux=dx/len, uy=dy/len;
+    const bx=tx-ux*L, by=ty-uy*L;
+    svg.insertAdjacentHTML('beforeend','<line x1="'+cx+'" y1="'+cy+'" x2="'+bx+'" y2="'+by+'" stroke="'+varv+'" stroke-width="2" stroke-linecap="round"/>'
+      +'<polygon points="'+tx+','+ty+' '+(bx-uy*B)+','+(by+ux*B)+' '+(bx+uy*B)+','+(by-ux*B)+'" fill="'+varv+'"/>');
   });
 }
 
@@ -2566,8 +2578,8 @@ function renderPaigutus(){
   const v=document.getElementById('ppVihje');
   if(paigutus.liiguta) v.innerHTML='Puuduta plaanil uut kohta seadmele <b>'+esc(paigutus.liiguta)+'</b>.';
   else if(paigutus.uus) v.innerHTML='Puuduta plaanil kohta, kuhu <b>uus seade</b> panna – siis küsitakse nime.';
-  else if(paigutus.valitud) v.innerHTML='Puuduta plaanil kohta, kuhu <b>'+esc(paigutus.valitud)+'</b> panna. Märgi saab lohistada kõrvale – siis tekib nool.';
-  else v.innerHTML='Kõik seadmed on paigutatud. Lisa uus seade või vajuta märgile, et seda muuta.';
+  else if(paigutus.valitud) v.innerHTML='Puuduta plaanil kohta, kuhu <b>'+esc(paigutus.valitud)+'</b> panna. Kasti saab lohistada kõrvale – siis tekib nool. Noole otsa (sinine ring) saab lohistada seadme täpsele kohale.';
+  else v.innerHTML='Kõik seadmed on paigutatud. Lohista kasti või noole otsa (sinine ring). Vajuta kastile, et seda muuta.';
 }
 function plaaniPunkt(e){
   const img=document.getElementById('plaanImg'), r=img.getBoundingClientRect(), S=seadmeSkeem();
@@ -2642,9 +2654,10 @@ function kysiNimi(soovitus){
   let lohe=null;
   kiht.addEventListener('pointerdown',e=>{
     if(!paigutus.aktiivne) return;
-    const d=e.target.closest('.silt'); if(!d) return;
+    const d=e.target.closest('.silt, .ots'); if(!d) return;
     e.preventDefault(); e.stopPropagation();
-    lohe={d, kood:d.dataset.kood, x:e.clientX, y:e.clientY, liikus:false, oma:d.classList.contains('oma')};
+    const ots=d.classList.contains('ots');
+    lohe={d, kood:d.dataset.kood, x:e.clientX, y:e.clientY, liikus:false, oma:ots||d.classList.contains('oma'), ots};
     try{ d.setPointerCapture(e.pointerId); }catch(err){}
   });
   kiht.addEventListener('pointermove',e=>{
@@ -2655,6 +2668,7 @@ function kysiNimi(soovitus){
     const kr=kiht.getBoundingClientRect();
     const px=Math.max(0,Math.min(100,(e.clientX-kr.left)/kr.width*100)), py=Math.max(0,Math.min(100,(e.clientY-kr.top)/kr.height*100));
     lohe.d.style.left=px+'%'; lohe.d.style.top=py+'%'; lohe.px=px; lohe.py=py;
+    if(lohe.ots){ const sl=[...kiht.querySelectorAll('.silt.oma')].find(x=>x.dataset.kood===lohe.kood); if(sl){ sl.dataset.tx=px; sl.dataset.ty=py; } }
     joonistaNooled();
   });
   const lopp=async e=>{
@@ -2662,9 +2676,11 @@ function kysiNimi(soovitus){
     const l=lohe; lohe=null;
     if(l.liikus){
       const S=seadmeSkeem(), a=S.sildid[l.kood];
-      if(a){ a[1]=Math.round(l.px/100*S.laius); a[2]=Math.round(l.py/100*lehtKorgus(S,a[0])); await salvestaSkeem(pk()); }
+      if(a){ const X=Math.round(l.px/100*S.laius), Y=Math.round(l.py/100*lehtKorgus(S,a[0]));
+        if(l.ots){ a[5]=X; a[6]=Y; } else { a[1]=X; a[2]=Y; }
+        await salvestaSkeem(pk()); }
       joonistaSildid();
-    }else if(e.type==='pointerup') margiMenyy(l.kood);
+    }else if(e.type==='pointerup' && !l.ots) margiMenyy(l.kood);
   };
   kiht.addEventListener('pointerup',lopp); kiht.addEventListener('pointercancel',lopp);
 })();
