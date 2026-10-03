@@ -125,7 +125,7 @@
   .fab.mini{height:40px; padding:0 16px; font-size:.9rem; background:var(--sinine); color:#fff;}
   /* tööriistad: valimata = valge, valitud = täisvärv + valge rõngas (Material: Orange 700, Purple 700) */
   #fabPliiats,#fabKustukumm,#fabPuhasta,#fabLisa{display:none;}
-  #fabLisa{background:#e3f6e9; color:#0f6e2f; border:2px solid #1da747;} #fabLisa.aktiivne{background:#1da747; color:#fff;}
+  #fabLisa{background:#fff; color:#111; border:2px solid #111;} #fabLisa.aktiivne{background:#111; color:#fff;}
   /* heledad toonid; vajutades / sisselülitatuna tume */
   #fabPliiats{background:#e3eefb; color:#1c63b7; border:2px solid #1c63b7;}
   #fabPliiats.aktiivne{background:#1c63b7; color:#fff;}
@@ -307,7 +307,8 @@
   #plaanVaade.muudan #plaanPaneel, #plaanVaade.paigutus #plaanPaneel{display:none!important;}
   #plaanVaade.lisa.ppKoos #plaanPilt{padding-bottom:64px;}
   #paigPaneel .kokku{white-space:nowrap; background:#e6eef8; color:var(--tume); border:none; border-radius:10px; padding:8px 12px; font-weight:800; font-size:.9rem; cursor:pointer; margin-left:auto;}
-  #paigPaneel.koos .chips, #paigPaneel.koos .vihje, #paigPaneel.koos .liug{display:none;}
+  #paigPaneel.koos .chips, #paigPaneel.koos .vihje, #paigPaneel.koos .liug, #paigPaneel.koos .ppSelgitus{display:none;}
+  #paigPaneel .ppSelgitus{font-size:.85rem; color:#456; margin:0 0 6px;}
   #paigPaneel.koos .pp1{margin-bottom:0;}
   #paigPaneel{display:none; position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:2px solid #c9d5ea; box-shadow:0 -4px 14px rgba(0,0,0,.15); padding:10px 12px 12px; z-index:30; color:var(--tume);}
   #paigPaneel .pp1{display:flex; justify-content:space-between; align-items:center; font-weight:800; margin-bottom:6px; gap:8px;}
@@ -436,7 +437,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 04.10.2026-S</div>
+    <div class="jalus">Rovalis OÜ · versioon 04.10.2026-T</div>
   </div>
 </div>
 
@@ -567,6 +568,7 @@
 </div>
 <div id="paigPaneel">
   <div class="pp1"><span id="ppPealkiri">Paiguta seadmed</span><button type="button" class="kokku" id="ppKokku" onclick="ppKokku()">▾ Peida</button><button type="button" class="valmis" onclick="valiTooriist('lisa')">✓ Valmis</button></div>
+  <div class="ppSelgitus" id="ppSelgitus"></div>
   <div class="chips" id="ppChips"></div>
   <div class="vihje" id="ppVihje"></div>
   <div class="liug">Tähise suurus <div class="suurNupud" id="ppSuurus"><button type="button" data-s="1">Väike</button><button type="button" data-s="1.3">Keskmine</button><button type="button" data-s="1.6">Suur</button></div></div>
@@ -1201,9 +1203,10 @@ function kattuvaidMarke(){
     const f0=margiCqw(S,j), f=f0*Math.max(1,S.suurus||1), ik=f0*2.2/2, g=0.3*f0;
     const r=[];
     Object.entries(S.sildid).filter(([k,a])=>a[0]===j&&a[7]).forEach(([k,a])=>{
-      const tx=a[5]/S.laius*100, ty=a[6]/S.laius*100, w=f*(0.9+0.62*k.length)/2, h=f*1.4/2;
+      let tx=a[5]/S.laius*100, ty=a[6]/S.laius*100; const w=f*(0.9+0.62*k.length)/2, h=f*1.4/2;
       let cx=a[1]/S.laius*100, cy=a[2]/S.laius*100;
       if(a[8]){
+        if(a[10]!=null){ tx=a[10]/S.laius*100; ty=a[11]/S.laius*100; }
         r.push({k, ik:1, left:tx-ik,right:tx+ik,top:ty-ik,bottom:ty+ik});
         if(a[9]==='r'){cx=tx+ik+g+w;cy=ty;} else if(a[9]==='l'){cx=tx-ik-g-w;cy=ty;} else if(a[9]==='u'){cx=tx;cy=ty-ik-g-h;} else if(a[9]==='a'){cx=tx;cy=ty+ik+g+h;}
       }
@@ -1244,6 +1247,14 @@ function joonistaSildid(){
         /* äpis paigutatud: märk seadme kohal, tähis kõrval (kleep) või vabalt noolega */
         d.dataset.ik='1';
         const ik=document.createElement('div'); ik.className='ikoon '+v+(akt?' aktiiv':''); ik.dataset.kood=kood;
+        if(a[10]!=null){
+          /* „Liiguta noolega“: märk eemal, noole ots jääb seadme tegelikku kohta */
+          ik.dataset.ox=d.dataset.tx; ik.dataset.oy=d.dataset.ty;
+          d.dataset.tx=a[10]/S.laius*100; d.dataset.ty=a[11]/K*100;
+          const o=document.createElement('div'); o.className='ots '+v+(akt?' aktiiv':''); o.dataset.kood=kood;
+          o.style.left=ik.dataset.ox+'%'; o.style.top=ik.dataset.oy+'%';
+          kiht.appendChild(o);
+        }
         ik.style.left=d.dataset.tx+'%'; ik.style.top=d.dataset.ty+'%';
         ik.innerHTML='<img src="'+liigiIkoon(l.ty)+'" alt="">';
         kiht.appendChild(ik);
@@ -1360,6 +1371,11 @@ function muudaPuudutus(e){
   const leitud=leiaPuudutatud(e);
   if(leitud && leitud!==paigutus.mark){ paigutus.mark=leitud; paigutus.liiguta=null; joonistaSildid(); renderPaigutus(); return; }
   if(leitud) return;
+  if(paigutus.liigutaNool){
+    const S=seadmeSkeem(), a=S&&S.sildid[paigutus.liigutaNool], pt=plaaniPunkt(e);
+    if(a && pt.j===a[0]){ a[10]=Math.round(pt.x); a[11]=Math.round(pt.y); if(a[9]===undefined) a[9]='r'; salvestaSkeem(pk()); }
+    paigutus.mark=paigutus.liigutaNool; paigutus.liigutaNool=null; joonistaSildid(); renderPaigutus(); return;
+  }
   if(paigutus.liiguta){ paigutaPuudutus(e); return; }
   if(paigutus.mark){ paigutus.mark=null; if(!paigutus.lisa){ joonistaSildid(); renderPaigutus(); return; } }
   if(paigutus.lisa) paigutaPuudutus(e);
@@ -1525,7 +1541,7 @@ function valiTooriist(t){
   tooriist=(tooriist===t)?null:t;
   kustukumm=(tooriist==='kumm');
   if(paigutus.aktiivne){
-    if(tooriist==='pliiats'||tooriist==='kumm'){ paigutus.mark=null; paigutus.liiguta=null; }
+    if(tooriist==='pliiats'||tooriist==='kumm'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; }
     lisaReziim(tooriist==='lisa');
     joonistaSildid();
   }
@@ -2595,6 +2611,19 @@ function joonistaNooled(){
   const kr=kiht.getBoundingClientRect(), W=kr.width, H=kr.height;
   if(!W||!H) return;
   svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.innerHTML='';
+  /* eemaletõstetud märk → nool seadme tegelikku kohta */
+  kiht.querySelectorAll('.ikoon').forEach(ie=>{
+    if(ie.dataset.ox===undefined || getComputedStyle(ie).display==='none') return;
+    const r=ie.getBoundingClientRect(), cx=r.left-kr.left+r.width/2, cy=r.top-kr.top+r.height/2;
+    let tx=parseFloat(ie.dataset.ox)/100*W, ty=parseFloat(ie.dataset.oy)/100*H;
+    const dx=tx-cx, dy=ty-cy, len=Math.hypot(dx,dy); if(len<r.width*0.6) return;
+    const ux=dx/len, uy=dy/len, t=(r.width/2+1)/Math.max(Math.abs(ux),Math.abs(uy));
+    const sx=cx+ux*t, sy=cy+uy*t, L=Math.max(3,r.width*0.35), B=L*0.45, lw=Math.max(0.8,r.width*0.07).toFixed(2);
+    const varv=ie.classList.contains('punane')?NOOLE_VARV.punane:ie.classList.contains('roheline')?NOOLE_VARV.roheline:'#d22b2b';
+    const bx=tx-ux*L, by=ty-uy*L;
+    svg.insertAdjacentHTML('beforeend','<line x1="'+sx+'" y1="'+sy+'" x2="'+bx+'" y2="'+by+'" stroke="'+varv+'" stroke-width="'+lw+'" stroke-linecap="round"/>'
+      +'<polygon points="'+tx+','+ty+' '+(bx-uy*B)+','+(by+ux*B)+' '+(bx+uy*B)+','+(by-ux*B)+'" fill="'+varv+'"/>');
+  });
   oma.forEach(d=>{
     if(getComputedStyle(d).display==='none') return;
     const r=d.getBoundingClientRect();
@@ -2655,7 +2684,7 @@ function lisaReziim(on){
 }
 function lopetaPaigutus(){
   if(!paigutus.aktiivne) return;
-  paigutus.aktiivne=false; paigutus.liiguta=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null; paigutus.uus=false;
+  paigutus.aktiivne=false; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null; paigutus.uus=false;
   document.getElementById('plaanVaade').classList.remove('paigutus','lisa');
   document.getElementById('paigPaneel').style.display='none';
   salvestaSkeem(pk());
@@ -2672,7 +2701,11 @@ function renderPaigutus(){
   const pm=paigutamata(), ik=liigiIkoon(skeemiTyyp);
   if(paigutus.valitud && !pm.find(s=>s.kood===paigutus.valitud)) paigutus.valitud=null;
   if(paigutus.lisa && !paigutus.valitud && !paigutus.uus && !paigutus.liiguta && pm.length) paigutus.valitud=pm[0].kood;
-  document.getElementById('ppPealkiri').textContent={tk:'Lisa kustuti',ttv:'Lisa voolik',uks:'Lisa uks'}[skeemiTyyp]+' · paigutamata '+pm.length;
+  const LN={tk:['kustuti','kustutid'],ttv:['voolik','voolikud'],uks:['uks','uksed']}[skeemiTyyp]||['seade','seadmed'];
+  document.getElementById('ppPealkiri').textContent={tk:'Lisa kustuti',ttv:'Lisa voolik',uks:'Lisa uks'}[skeemiTyyp]+' skeemile';
+  document.getElementById('ppSelgitus').textContent=pm.length
+    ? 'Nimekirjas olemas, aga skeemil veel pole ('+pm.length+') – vali ja puuduta plaanil kohta:'
+    : 'Kõik nimekirja '+LN[1]+' on skeemil. Uue lisamiseks vajuta „+ Uus '+LN[0]+'“ ja puuduta plaanil kohta.';
   const ch=document.getElementById('ppChips'); ch.innerHTML='';
   setTimeout(kinnitaFabid,30);
   pm.forEach(s=>{
@@ -2681,11 +2714,12 @@ function renderPaigutus(){
     b.onclick=()=>{ paigutus.valitud=s.kood; paigutus.uus=false; paigutus.liiguta=null; renderPaigutus(); };
     ch.appendChild(b);
   });
-  const u=document.createElement('button'); u.type='button'; u.className='chip uus'+(paigutus.uus?' v':''); u.textContent='+ Uus '+({tk:'kustuti',ttv:'voolik',uks:'uks'}[skeemiTyyp]||'seade');
+  const u=document.createElement('button'); u.type='button'; u.className='chip uus'+(paigutus.uus?' v':''); u.textContent='+ Uus '+({tk:'kustuti',ttv:'voolik',uks:'uks'}[skeemiTyyp]||'seade')+' (pole nimekirjas)';
   u.onclick=()=>{ paigutus.uus=!paigutus.uus; paigutus.valitud=null; paigutus.liiguta=null; renderPaigutus(); };
   ch.appendChild(u);
   const v=document.getElementById('ppVihje');
-  if(paigutus.mark&&!paigutus.liiguta) v.innerHTML='<b>'+esc(paigutus.mark)+'</b> on valitud – lohista märki või tähist. Uuesti vajutades avaneb menüü. Tühja kohta puudutades valik kaob.';
+  if(paigutus.liigutaNool) v.innerHTML='Puuduta kohta, kuhu <b>'+esc(paigutus.liigutaNool)+'</b> märk tõsta – noole ots jääb seadme kohale.';
+  else if(paigutus.mark&&!paigutus.liiguta) v.innerHTML='<b>'+esc(paigutus.mark)+'</b> on valitud – lohista märki või tähist. Uuesti vajutades avaneb menüü. Tühja kohta puudutades valik kaob.';
   else if(paigutus.liiguta) v.innerHTML='Puuduta plaanil uut kohta seadmele <b>'+esc(paigutus.liiguta)+'</b>.';
   else if(paigutus.uus) v.innerHTML='Puuduta plaanil kohta, kuhu <b>uus '+({tk:'kustuti',ttv:'voolik',uks:'uks'}[skeemiTyyp]||'seade')+'</b> panna – sinna tuleb märk ja tähis kõrvale.';
   else if(paigutus.valitud) v.innerHTML='Puuduta plaanil kohta, kuhu <b>'+esc(paigutus.valitud)+'</b> panna. Sinna tuleb märk ja tähis kõrvale. Märki lohistades liigub tähis kaasa; tähise võib tõsta märgi teisele küljele või kaugemale – siis tekib nool.';
@@ -2730,10 +2764,12 @@ async function paigutaPuudutus(e){
 }
 async function margiMenyy(kood){
   const S=seadmeSkeem(); if(!S||!S.sildid[kood]) return;
-  const v=await kysi(kood, 'Mida teen selle märgiga?', [
-    {tekst:'↔ Liiguta', klass:'tavaline', vaartus:'l'},
+  const a=S.sildid[kood], nupud=[{tekst:'↔ Liiguta', klass:'tavaline', vaartus:'l'}];
+  if(a[8]) nupud.push({tekst:'↗ Liiguta noolega', klass:'tavaline', vaartus:'n'});
+  const v=await kysi(kood, 'Mida teen selle märgiga?', nupud.concat([
     {tekst:'🗑 Kustuta seade', klass:'ohtlik', vaartus:'k'},
-    {tekst:'Tühista', klass:'tavaline', vaartus:null}]);
+    {tekst:'Tühista', klass:'tavaline', vaartus:null}]));
+  if(v==='n'){ paigutus.liigutaNool=kood; paigutus.liiguta=null; renderPaigutus(); teade('Puuduta kohta, kuhu märk tõsta – noole ots jääb '+kood+' kohale'); return; }
   if(v==='l'){ paigutus.liiguta=kood; paigutus.valitud=null; paigutus.uus=false; renderPaigutus(); return; }
   if(v==='k'){ paigutus.mark=null; await kustutaSeade(valitudMaja(), kood); renderPaigutus(); joonistaSildid(); }
 }
@@ -2791,8 +2827,12 @@ function kysiNimi(soovitus){
     const kr=kiht.getBoundingClientRect();
     const px=Math.max(0,Math.min(100,(e.clientX-kr.left)/kr.width*100)), py=Math.max(0,Math.min(100,(e.clientY-kr.top)/kr.height*100));
     lohe.d.style.left=px+'%'; lohe.d.style.top=py+'%'; lohe.px=px; lohe.py=py;
-    if(lohe.ots){ const sl=[...kiht.querySelectorAll('.silt.oma')].find(x=>x.dataset.kood===lohe.kood);
-      if(sl){ sl.dataset.tx=px; sl.dataset.ty=py; if(sl.classList.contains('kleep')){ sl.style.left=px+'%'; sl.style.top=py+'%'; } } }
+    if(lohe.ots){
+      const sl=[...kiht.querySelectorAll('.silt.oma')].find(x=>x.dataset.kood===lohe.kood);
+      const ie=[...kiht.querySelectorAll('.ikoon')].find(x=>x.dataset.kood===lohe.kood);
+      if(!lohe.ikoon && ie && ie.dataset.ox!==undefined){ ie.dataset.ox=px; ie.dataset.oy=py; }   /* eemal oleva märgi noole ots */
+      else if(sl){ sl.dataset.tx=px; sl.dataset.ty=py; if(sl.classList.contains('kleep')){ sl.style.left=px+'%'; sl.style.top=py+'%'; } }
+    }
     joonistaNooled();
   });
   const lopp=async e=>{
@@ -2801,7 +2841,16 @@ function kysiNimi(soovitus){
     if(l.liikus){
       const S=seadmeSkeem(), a=S.sildid[l.kood];
       if(a){ const X=Math.round(l.px/100*S.laius), Y=Math.round(l.py/100*lehtKorgus(S,a[0]));
-        if(l.ots){ a[5]=X; a[6]=Y; }
+        if(l.ots){
+          if(l.ikoon && a[10]!=null){
+            /* eemal olev märk: noole ots jääb paigale; tagasi otsa peale → nool kaob */
+            const ir=l.d.getBoundingClientRect(), kr=kiht.getBoundingClientRect();
+            const ox=kr.left+a[5]/S.laius*kr.width, oy=kr.top+a[6]/lehtKorgus(S,a[0])*kr.height;
+            if(Math.hypot(ir.left+ir.width/2-ox, ir.top+ir.height/2-oy)<ir.width*0.8){ a[10]=null; a[11]=null; }
+            else { a[10]=X; a[11]=Y; }
+          }
+          else { a[5]=X; a[6]=Y; }
+        }
         else{
           a[1]=X; a[2]=Y;
           if(a[8]){
