@@ -309,7 +309,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-D</div>
+    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-E</div>
   </div>
 </div>
 
@@ -1383,7 +1383,97 @@ function kuupEst(iso){ if(!iso||iso==='-') return iso||''; const p=iso.split('-'
 function tanane(){ return kuupEst(new Date().toISOString().slice(0,10)); }
 
 /* ---- EKSPORT ---- */
-function eksport(){
+/* maja andmed Exceli päisesse (firma ja täisaadress) */
+const MAJA_INFO={
+  LM13:{firma:'SmartPosti AS', aadress:'Loomäe tee 13, Rae vald'},
+  SK3:{firma:'', aadress:'Sinikivi tee 3'}
+};
+/* lehe pealkiri ja värv (variant C) */
+const EKSPORDI_LEHED=[
+  {voti:'tk', nimi:'Tulekustutid', pealkiri:'Tulekustutite kvartaalne vaatlus / kontroll', varv:'FF9C2B2B',
+   paised:['Nimetus','10a hooldus','2a kontroll','Vaatlus (kv)','Märkus']},
+  {voti:'ttv', nimi:'Voolikud', pealkiri:'Tuletõrjevoolikute kvartaalne vaatlus / kontroll', varv:'FFC65911',
+   paised:['Nimetus','5a hooldus','1a kontroll','Vaatlus (kv)','Märkus']},
+  {voti:'uks', nimi:'Uksed', pealkiri:'Tuletõkke- ja evakuatsiooniuste vaatlus / kontroll', varv:'FF1F4E79',
+   paised:['Nimetus','Tulekindlus','6 kuud (hooldus)','Vaatlus (kv)','Märkus']}
+];
+const TUHJAD_READ=100;   /* sinine-valge tabel vähemalt 100 rea pikkuseks, et saaks käsitsi lisada */
+function laadiSkript(src){
+  return new Promise((ok,viga)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=viga; document.head.appendChild(s); });
+}
+/* ISO kuupäev → Exceli kuupäev (UTC kesköö = täpselt see päev, ilma kellaajata) */
+function exceliKuup(iso){
+  if(!iso||iso==='-') return iso||null;
+  const m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m? new Date(Date.UTC(+m[1],+m[2]-1,+m[3])) : iso;
+}
+async function eksport(){
+  const m=valitudMaja();
+  if(!m){ teade('Vali kõigepealt maja'); return; }
+  try{ if(!window.ExcelJS) await laadiSkript('lib/exceljs.min.js'); }catch(e){}
+  if(!window.ExcelJS){ eksportVana(); return; }
+  const a=andmed[m]||{tk:[],ttv:[],uks:[]};
+  const info=MAJA_INFO[m]||{};
+  const majaNimi=document.querySelector('#maja option:checked').textContent;
+  const wb=new ExcelJS.Workbook();
+  wb.creator='Rovalis';
+  const TUME='FF1F3864', HALL='FF404040';
+  const ohuke={style:'thin',color:{argb:'FF8EA9DB'}};
+  const raam={top:ohuke,left:ohuke,bottom:ohuke,right:ohuke};
+  EKSPORDI_LEHED.forEach(L=>{
+    const ws=wb.addWorksheet(L.nimi,{
+      views:[{state:'frozen',ySplit:5}],
+      pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,printTitlesRow:'1:5'},
+      headerFooter:{oddFooter:'&L'+L.pealkiri+'&RLk &P / &N'}
+    });
+    ws.columns=[{width:17},{width:18.3},{width:17},{width:18},{width:55}];
+    ws.getCell('A1').value=info.firma||majaNimi; ws.getCell('A1').font={name:'Aptos',size:16,bold:true,color:{argb:TUME}};
+    ws.getRow(1).height=22;
+    ws.getCell('A2').value=info.aadress||''; ws.getCell('A2').font={name:'Aptos',size:12,color:{argb:TUME}};
+    ws.getCell('A3').value=L.pealkiri; ws.getCell('A3').font={name:'Aptos',size:13,bold:true,color:{argb:L.varv}};
+    ws.getCell('A4').value='Teostaja:'; ws.getCell('A4').font={name:'Aptos',size:11,italic:true,color:{argb:HALL}};
+    ['B4','C4'].forEach(c=>ws.getCell(c).border={bottom:{style:'thin',color:{argb:'FF808080'}}});
+    ws.getCell('E4').value='Seisuga: '+tanane(); ws.getCell('E4').font={name:'Aptos',size:11,italic:true,color:{argb:HALL}};
+    ws.getCell('E4').alignment={horizontal:'right'};
+    /* päis */
+    const p=ws.getRow(5); p.height=20;
+    L.paised.forEach((t,i)=>{
+      const c=p.getCell(i+1); c.value=t;
+      c.font={name:'Aptos',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+      c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF4472C4'}};
+      c.border=raam; c.alignment={horizontal:(i>=1&&i<=3)?'center':'left',vertical:'middle'};
+    });
+    /* andmed */
+    const list=a[L.voti]||[];
+    const read=list.map(s=> L.voti==='uks'
+      ? [s.kood, s.tulekindlus||'', exceliKuup(s.hooldus), exceliKuup(s.vaatlus), markusEksport(s)]
+      : [s.kood, exceliKuup(s.hooldus), exceliKuup(s.kontroll), exceliKuup(s.vaatlus), markusEksport(s)]);
+    const viimane=5+Math.max(read.length, TUHJAD_READ);
+    for(let r=6;r<=viimane;r++){
+      const rida=ws.getRow(r), v=read[r-6]||[];
+      for(let c=1;c<=5;c++){
+        const x=rida.getCell(c);
+        if(v[c-1]!=null && v[c-1]!=='') x.value=v[c-1];
+        x.font={name:'Aptos',size:11};
+        x.border=raam;
+        if((r-6)%2===0) x.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9E1F2'}};
+        if(c>=2&&c<=4){ x.alignment={horizontal:'center'}; x.numFmt='dd.mm.yyyy'; }
+        if(c===5) x.alignment={wrapText:true,vertical:'top'};
+      }
+    }
+    ws.autoFilter='A5:E5';
+    ws.pageSetup.printArea='A1:E'+(5+Math.max(read.length,1));   /* prindi ainult täidetud read */
+  });
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const u=URL.createObjectURL(blob), l=document.createElement('a');
+  l.href=u; l.download=m+' TK, TTV, TTU '+tanane()+'.xlsx'; document.body.appendChild(l); l.click(); l.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),2000);
+  teade('Eksporditud: '+m+' ('+(a.tk||[]).length+' TK, '+(a.ttv||[]).length+' TTV, '+(a.uks||[]).length+' ust)');
+}
+
+/* varuvariant: lihtne eksport (kui ExcelJS ei laadi) */
+function eksportVana(){
   const m=valitudMaja();
   if(!m){ teade('Vali kõigepealt maja'); return; }
   const a=andmed[m]||{tk:[],ttv:[],uks:[]};
