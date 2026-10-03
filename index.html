@@ -404,7 +404,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-L</div>
+    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-M</div>
   </div>
 </div>
 
@@ -420,7 +420,7 @@
   <div class="uusRida" id="skeemiTegevused">
     <button type="button" class="ikNupp" onclick="avaSkeemiImport()"><span class="ik" id="ikImp"></span>Impordi<span class="lisa"> skeem</span></button>
     <button type="button" class="ikNupp" id="nupEksSkeem" onclick="ekspordiSkeem()"><span class="ik" id="ikEks"></span>Ekspordi<span class="lisa"> skeem</span></button>
-    <button type="button" class="ikNupp" id="nupPaiguta" onclick="alustaPaigutus()"><span class="ik" id="ikPin"></span>Paiguta<span class="lisa"> seadmed</span></button>
+    <button type="button" class="ikNupp" id="nupPaiguta" onclick="alustaPaigutus()"><span class="ik" id="ikPin"></span><span id="paigNimi">Lisa kustuti</span></button>
   </div>
   <div id="skeemiRiba"><span id="ribaLoend"></span></div>
   </div>
@@ -917,6 +917,7 @@ function avaPlaan(){
   const onSkeem=!!(plaanid[m]&&plaanid[m].lehed.length);
   document.getElementById('nupEksSkeem').disabled=!['tk','ttv','uks'].some(t=>plaanid[maja+':'+t]&&plaanid[maja+':'+t].lehed.length);
   document.getElementById('nupPaiguta').disabled=!onSkeem;
+  document.getElementById('paigNimi').textContent={tk:'Lisa kustuti',ttv:'Lisa voolik',uks:'Lisa uks'}[skeemiTyyp];
   joonistaTyybiValik();
   const nup=document.getElementById('leheNupud');
   nup.innerHTML='';
@@ -1070,7 +1071,8 @@ function valjaOlekud(s,tyyp){
   else{
     const kv=kvartaliNr(tana), vk=kvartaliNr(kuupLoe(s.vaatlus));
     if(vk<kv-1) r.vaatlus={varv:'punane', tekst:'eelmise kvartali vaatlus tegemata'};
-    else if(vk===kv-1) r.vaatlus={varv:'kollane', tekst:'selle kvartali vaatlus tegemata'};
+    else if(vk===kv-1){ const q=Math.floor(tana.getMonth()/3), lp=new Date(tana.getFullYear(),q*3+3,0);
+      r.vaatlus={varv:'', tekst:'selle kvartali vaatlus tegemata (tähtaeg '+String(lp.getDate()).padStart(2,'0')+'.'+String(lp.getMonth()+1).padStart(2,'0')+'.'+lp.getFullYear()+')', hall:true}; }
     else r.vaatlus={varv:'', tekst:''};
   }
   const tahtaeg=(kp,maxP,nimi,hoiatus=true)=>{
@@ -1079,7 +1081,7 @@ function valjaOlekud(s,tyyp){
     const lopp=new Date(kuupLoe(kp).getTime()+maxP*PAEV);
     const lopTxt=String(lopp.getDate()).padStart(2,'0')+'.'+String(lopp.getMonth()+1).padStart(2,'0')+'.'+lopp.getFullYear();
     if(jaanud<0) return {varv:'punane', tekst:nimi+' tähtaeg möödas ('+lopTxt+')'};
-    if(hoiatus && jaanud<=30) return {varv:'kollane', tekst:nimi+' tähtaeg '+lopTxt};
+    if(hoiatus && jaanud<=30) return {varv:'', tekst:nimi+' tähtaeg '+lopTxt, hall:true};  /* kollast enam pole – ainult info */
     return {varv:'', tekst:'kehtib kuni '+lopTxt, hall:true};
   };
   if(T.kontrollMax) r.kontroll=tahtaeg(s.kontroll,T.kontrollMax,'kontrolli',false); /* kontrollil 30 p hoiatust pole (Tarmo soov) */
@@ -1087,7 +1089,7 @@ function valjaOlekud(s,tyyp){
   const om=olekJaMarkus(s);
   if(om.olek==='puudus') r.olek={varv:'punane', tekst:'puudus'+(om.markus?': '+om.markus:'')};
   else if(om.olek==='korras') r.olek={varv:'', tekst:''};
-  else r.olek={varv:'kollane', tekst:'olek märkimata'};
+  else r.olek={varv:'', tekst:''};
   return r;
 }
 function seadmeOlek(s,tyyp){
@@ -1171,7 +1173,7 @@ function joonistaSildid(){
   paigutaKiht();
   const rl=document.getElementById('ribaLoend');
   rl.innerHTML='<b>'+S.korrused[j]+':</b>';
-  [['punane','punased'],['kollane','kollased'],['roheline','rohelised']].forEach(([v,nimi])=>{
+  [['punane','punased'],['roheline','rohelised']].forEach(([v,nimi])=>{
     const b=document.createElement('button');
     b.className='varviNupp '+v+(filtriVarv===v?' valitud':'')+(filtriVarv&&filtriVarv!==v?' tuhm':'');
     b.innerHTML='<span class="tapp '+v+'"></span>'+loend[v];
@@ -1982,7 +1984,7 @@ function uuendaVormiVarvid(){
   g('olekKorras').classList.toggle('tuhm',vormOlek==='puudus');
   g('olekPuudus').classList.toggle('tuhm',vormOlek==='korras');
   const io=g('iOlek');
-  if(!vormOlek){ io.textContent=vormEelmine||'Vali olek'; io.className='valjaInfo '+(vormEelmine?'hall':'kollane'); }
+  if(!vormOlek){ io.textContent=vormEelmine||'Vali olek'; io.className='valjaInfo hall'; }
   else { io.textContent=''; io.className='valjaInfo'; }
   /* märkuse väli ja puuduse kiirnupud ainult siis, kui olek on „Puudus“ */
   const naitaM=vormOlek==='puudus';
@@ -2521,7 +2523,7 @@ function renderPaigutus(){
   const pm=paigutamata(), ik=liigiIkoon(skeemiTyyp);
   if(paigutus.valitud && !pm.find(s=>s.kood===paigutus.valitud)) paigutus.valitud=null;
   if(!paigutus.valitud && !paigutus.uus && !paigutus.liiguta && pm.length) paigutus.valitud=pm[0].kood;
-  document.getElementById('ppPealkiri').textContent='Paiguta seadmed · paigutamata '+pm.length;
+  document.getElementById('ppPealkiri').textContent={tk:'Lisa kustuti',ttv:'Lisa voolik',uks:'Lisa uks'}[skeemiTyyp]+' · paigutamata '+pm.length;
   const ch=document.getElementById('ppChips'); ch.innerHTML='';
   pm.forEach(s=>{
     const b=document.createElement('button'); b.type='button'; b.className='chip'+(s.kood===paigutus.valitud?' v':'');
@@ -2767,15 +2769,17 @@ async function looAruanne(){
   /* kokkuvõte selle kvartali järgi */
   const kvNyyd=kvartaliNr(new Date());
   let korras=0, puudus=0, mark=0;
-  list.forEach(s=>{ const o=olekJaMarkus(s).olek, selKv=!!s.vaatlus&&kvartaliNr(kuupLoe(s.vaatlus))===kvNyyd;
-    if(o==='puudus') puudus++; else if(o==='korras'&&selKv) korras++; else mark++; });
-  y+=5; const kw=(LAI-8)/3;
-  [[korras,'korras',[227,246,233],[19,122,51]],[puudus,puudus===1?'puudus':'puudust',[253,232,232],[198,40,40]],[mark,'vaatlemata',[255,244,204],[122,86,0]]].forEach(([n,t,bg,fg],i)=>{
+  list.forEach(s=>{ if(seadmeVarv(s,aktiivneTyyp)==='punane') puudus++; else korras++;
+    if(!s.vaatlus||kvartaliNr(kuupLoe(s.vaatlus))!==kvNyyd) mark++; });
+  y+=5; const kw=(LAI-4)/2;
+  [[korras,'korras',[227,246,233],[19,122,51]],[puudus,'puudus / tähtaeg möödas',[253,232,232],[198,40,40]]].forEach(([n,t,bg,fg],i)=>{
     const x=ML+i*(kw+4); doc.setFillColor(...bg); doc.roundedRect(x,y,kw,17,2.5,2.5,'F');
     doc.setTextColor(...fg); doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.text(String(n), x+kw/2, y+8, {align:'center'});
     doc.setFontSize(10.5); doc.text(t, x+kw/2, y+14, {align:'center'});
   });
-  y+=25;
+  y+=23;
+  if(mark){ doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(70,70,70); doc.text('Sel kvartalil veel vaatlemata: '+mark+' (vaatlus tuleb teha kvartali lõpuks)', ML, y); y+=7; }
+  else y+=2;
   const lehtOtsas=k=>{ if(y+k>282){ doc.addPage(); y=16; } };
   /* puudused koos fotodega */
   doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...TUME); doc.text('Puudused', ML, y); y+=4;
@@ -2821,12 +2825,11 @@ async function looAruanne(){
       if(d.section!=='body') return;
       const v=olekud[d.row.index][vali[d.column.index]];
       if(v&&v.varv==='punane'){ d.cell.styles.fillColor=[253,232,232]; d.cell.styles.textColor=[183,28,28]; }
-      else if(v&&v.varv==='kollane'){ d.cell.styles.fillColor=[255,244,204]; }
     }
   });
   y=doc.lastAutoTable.finalY+5; lehtOtsas(14);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(102,102,102);
-  doc.text(doc.splitTextToSize('Kokkuvõte arvestab käesolevat kvartalit: „korras“ = sel kvartalil vaadeldud ja korras, „vaatlemata“ = sel kvartalil veel vaatlemata. Tabelis: punane – tähtaeg möödas, puudub või puudus; kollane – tähtaeg läheneb, eelmise kvartali vaatlus või olek märkimata.', LAI), ML, y);
+  doc.text(doc.splitTextToSize('Punane – tähtaeg on ületatud, kuupäev puudub või seadmel on puudus. Kvartaalne vaatlus kehtib järgmise kvartali lõpuni.', LAI), ML, y);
   /* jalus igale lehele */
   const n=doc.getNumberOfPages();
   for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); doc.setTextColor(110,110,110); doc.setFont('helvetica','normal');
@@ -2851,13 +2854,8 @@ async function looAruanneAken(){
   /* kastid selle kvartali järgi: puudus = Puudus-olek; korras = sel kvartalil vaadeldud ja Korras; muu = vaatlemata */
   const kvNyyd=kvartaliNr(new Date());
   let korras=0, puudus=0, mark=0;
-  list.forEach(s=>{
-    const o=olekJaMarkus(s).olek;
-    const selKv=!!s.vaatlus && kvartaliNr(kuupLoe(s.vaatlus))===kvNyyd;
-    if(o==='puudus') puudus++;
-    else if(o==='korras' && selKv) korras++;
-    else mark++;
-  });
+  list.forEach(s=>{ if(seadmeVarv(s,aktiivneTyyp)==='punane') puudus++; else korras++;
+    if(!s.vaatlus||kvartaliNr(kuupLoe(s.vaatlus))!==kvNyyd) mark++; });
   /* puudused koos fotodega */
   let pd='';
   for(const s of list){
@@ -2894,10 +2892,10 @@ async function looAruanneAken(){
     +'<h1>'+esc(info.firma||majaNimi)+'</h1><div class="adr">'+esc(info.aadress||'')+'</div>'
     +'<h2>'+esc(L.pealkiri)+' – aruanne</h2>'
     +'<div class="meta"><span>Teostaja: ______________________</span><span>Seisuga: '+tanane()+'</span></div>'
-    +'<div class="kok"><div class="kk ok"><span>'+korras+'</span>korras</div><div class="kk pu"><span>'+puudus+'</span>'+(puudus===1?'puudus':'puudust')+'</div><div class="kk ma"><span>'+mark+'</span>vaatlemata</div></div>'
+    +'<div class="kok"><div class="kk ok"><span>'+korras+'</span>korras</div><div class="kk pu"><span>'+puudus+'</span>puudus / tähtaeg möödas</div></div>'+(mark?'<p class="muu">Sel kvartalil veel vaatlemata: '+mark+' (vaatlus tuleb teha kvartali lõpuks)</p>':'')
     +'<h3>Puudused</h3>'+(pd||'<p class="muu">Puudusi ei ole.</p>')
     +'<h3>Kõik seadmed ('+list.length+')</h3><table><thead><tr>'+L.paised.map(t=>'<th>'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rid+'</tbody></table>'
-    +'<div class="leg">Kokkuvõte arvestab käesolevat kvartalit: „korras“ = sel kvartalil vaadeldud ja korras, „vaatlemata“ = sel kvartalil veel vaatlemata. Tabelis: punane – tähtaeg möödas, puudub või puudus; kollane – tähtaeg läheneb, eelmise kvartali vaatlus või olek märkimata.</div>'
+    +'<div class="leg">Punane – tähtaeg on ületatud, kuupäev puudub või seadmel on puudus. Kvartaalne vaatlus kehtib järgmise kvartali lõpuni.</div>'
     +'<script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>';
   aken.document.open(); aken.document.write(html); aken.document.close();
 }
