@@ -309,7 +309,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-G</div>
+    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-H</div>
   </div>
 </div>
 
@@ -1457,8 +1457,15 @@ async function eksport(){
         x.font={name:'Aptos',size:11};
         x.border=raam;
         if((r-6)%2===0) x.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9E1F2'}};
-        if(c>=2&&c<=4){ x.alignment={horizontal:'center'}; x.numFmt='dd.mm.yyyy'; }
+        x.alignment={vertical:'top'};
+        if(c>=2&&c<=4){ x.alignment={horizontal:'center',vertical:'top'}; x.numFmt='dd.mm.yyyy'; }
         if(c===5) x.alignment={wrapText:true,vertical:'top'};
+      }
+      /* pikk märkus: tee rida nii kõrgeks, et kogu tekst oleks näha ka prinditult (~48 märki rea kohta, varuga) */
+      const mk=String(v[4]||'');
+      if(mk){
+        const ridu=mk.split(/\r?\n/).reduce((n,t)=>n+Math.max(1,Math.ceil(t.length/48)),0);
+        if(ridu>1) rida.height=15*ridu+3;
       }
     }
     ws.autoFilter='A5:E5';
