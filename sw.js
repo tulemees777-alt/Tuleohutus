@@ -1,6 +1,6 @@
 /* Rovalis – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'rovalis-2026-10-03j';
+const VERSIOON = 'rovalis-2026-10-03k';
 const FAILID = [
   './',
   './index.html',
@@ -14,7 +14,9 @@ const FAILID = [
   './lib/pdf.worker.min.js',
   './lib/qrcode.min.js',
   './lib/jsQR.js',
-  './lib/exceljs.min.js'
+  './lib/exceljs.min.js',
+  './lib/jspdf.umd.min.js',
+  './lib/jspdf.plugin.autotable.min.js'
 ];
 
 self.addEventListener('install', e => {
