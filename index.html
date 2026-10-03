@@ -123,10 +123,15 @@
   #fabSalvesta{bottom:16px; background:#1da747; display:none;}
   #fabTyhista{bottom:78px; background:var(--punane); display:none;}
   .fab.mini{height:40px; padding:0 16px; font-size:.9rem; background:var(--sinine); color:#fff;}
-  /* tööriistade värvid: Material Design palett (Orange 700 ja Purple 700) */
-  #fabKustukumm{display:none; background:#F57C00;}
-  #fabKustukumm.aktiivne{background:#E65100; box-shadow:0 0 0 3px #fff, 0 4px 12px rgba(0,0,0,.35);}
-  #fabPuhasta{display:none; background:#7B1FA2;}
+  /* tööriistad: valimata = valge, valitud = täisvärv + valge rõngas (Material: Orange 700, Purple 700) */
+  #fabPliiats,#fabKustukumm,#fabTagasi,#fabPuhasta{display:none;}
+  .fab.tool{background:#fff; color:var(--sinine); border:2px solid var(--sinine);}
+  #fabKustukumm.tool{color:#E65100; border-color:#F57C00;}
+  #fabPliiats.aktiivne{background:var(--sinine); color:#fff; box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--sinine), 0 4px 12px rgba(0,0,0,.35);}
+  #fabKustukumm.aktiivne{background:#F57C00; color:#fff; box-shadow:0 0 0 3px #fff, 0 0 0 5px #F57C00, 0 4px 12px rgba(0,0,0,.35);}
+  #fabTagasi{background:#4a5d75;}
+  #fabTagasi.tuhm{opacity:.45;}
+  #fabPuhasta{background:#7B1FA2;}
   #kinnitusKate{position:fixed; inset:0; background:rgba(10,30,60,.55); display:none; align-items:center; justify-content:center; z-index:40;}
   #pinKate{position:fixed; inset:0; background:#eef4fb; display:none; align-items:center; justify-content:center; z-index:100;}
   .kinnitus{background:#fff; border-radius:16px; padding:24px 22px; max-width:320px; width:86%; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.35);}
@@ -301,7 +306,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 02.10.2026-Z</div>
+    <div class="jalus">Rovalis OÜ · versioon 03.10.2026-A</div>
   </div>
 </div>
 
@@ -318,11 +323,13 @@
   </div>
   <input type="file" id="plaanFail" accept="application/pdf,image/*" multiple>
   <div id="plaanPilt"><div id="siltInfoHoidja"><div id="siltInfo"></div></div><img id="plaanImg" src="" alt="Paiknemisskeem"><div id="plaanKiht"></div></div>
-  <button class="fab" id="fabJoonista" onclick="alustaJoonistus()" title="Märgi joonisele">✏ Märgi</button>
-  <button class="fab" id="fabSalvesta" onclick="lopetaJoonistus(true)" title="Salvesta joonis">✓ Salvesta</button>
+  <button class="fab" id="fabJoonista" onclick="alustaJoonistus()" title="Märgi joonisele">✎ Muuda</button>
+  <button class="fab tool" id="fabPliiats" onclick="valiTooriist('pliiats')" title="Pliiats (vajuta uuesti, et kaarti liigutada)">✏ Pliiats</button>
+  <button class="fab tool" id="fabKustukumm" onclick="valiTooriist('kumm')" title="Kustukumm (vajuta uuesti, et kaarti liigutada)">🧽 Kustukumm</button>
+  <button class="fab" id="fabTagasi" onclick="votaTagasi()" title="Võta viimane tegevus tagasi">↶ Tagasi</button>
+  <button class="fab" id="fabPuhasta" onclick="puhastaLeht()" title="Kustuta selle lehe kõik märkmed">🗑 Puhasta</button>
   <button class="fab" id="fabTyhista" onclick="lopetaJoonistus(false)" title="Tühista">✕ Tühista</button>
-  <button class="fab" id="fabKustukumm" onclick="lylitaKustukumm()" title="Kustukumm">🧽 Kustukumm</button>
-  <button class="fab" id="fabPuhasta" onclick="puhastaLeht()" title="Kustuta selle lehe kõik märkmed">Puhasta</button>
+  <button class="fab" id="fabSalvesta" onclick="lopetaJoonistus(true)" title="Salvesta joonis">✓ Salvesta</button>
 </div>
 
 <div class="alamVaade" id="kustutidVaade">
@@ -1093,7 +1100,7 @@ function kinnitaPuhastus(jah){
   document.getElementById('plaanImg').src=orig;
   salvestaPlaanid(m);
   /* kui joonistusrežiim on lahti, tõmba ka kanvas puhtaks */
-  if(joonKanvas && origKanvas){ joonCtx.drawImage(origKanvas,0,0,joonKanvas.width,joonKanvas.height); }
+  if(joonKanvas && origKanvas){ lisaAjalukku(joonCtx.getImageData(0,0,joonKanvas.width,joonKanvas.height)); joonCtx.drawImage(origKanvas,0,0,joonKanvas.width,joonKanvas.height); }
   teade('Lehe '+(aktiivneLeht+1)+' märkmed kustutatud');
 }
 
@@ -1114,14 +1121,16 @@ function kinnitaFabid(){
   if(document.getElementById('plaanVaade').style.display!=='flex') return;
   const sc=vv.scale||1;
   const kylili=window.matchMedia('(orientation:landscape) and (max-height:520px)').matches;
-  const fabid=kylili
-    ? [['fabJoonista',10,'p'],['fabSalvesta',10,'p'],['fabTyhista',58,'p'],['fabKustukumm',106,'p'],['fabPuhasta',154,'p']]
-    : [['fabJoonista',16,'v'],['fabSalvesta',16,'v'],['fabTyhista',78,'v'],['fabKustukumm',140,'v'],['fabPuhasta',202,'v']];
+  /* „Muuda“ külili paremas külgribas; tööriistad alati kaardi vasakus servas üksteise all */
+  const jrk=['fabSalvesta','fabTyhista','fabPuhasta','fabTagasi','fabKustukumm','fabPliiats'];
+  const samm=kylili?45:58, alg=kylili?8:16;
+  const fabid=[['fabJoonista',kylili?10:16,kylili?'p':'v']].concat(jrk.map((id,i)=>[id,alg+i*samm,kylili?'v2':'v']));
   fabid.forEach(([id,alt,serv])=>{
     const el=document.getElementById(id);
     if(!el) return;
     const h=el.offsetHeight||50, w=el.offsetWidth||100;
     if(serv==='v') el.style.left=(vv.offsetLeft+14/sc)+'px';
+    else if(serv==='v2') el.style.left=(vv.offsetLeft+8/sc)+'px';
     else el.style.left=(vv.offsetLeft+vv.width-(78+w/2)/sc)+'px';   /* külgriba (156 px) keskele */
     el.style.top=(vv.offsetTop+vv.height-(alt+h)/sc)+'px';
     el.style.bottom='auto';
@@ -1193,10 +1202,32 @@ document.getElementById('plaanFail').addEventListener('change', async e=>{
 
 /* --- joonisele märkimine --- */
 let joonKanvas=null, joonCtx=null, joonistan=false, kustukumm=false, origMuster=null, origKanvas=null;
-function lylitaKustukumm(){
-  kustukumm=!kustukumm;
-  document.getElementById('fabKustukumm').classList.toggle('aktiivne', kustukumm);
-  teade(kustukumm?'Kustukumm: tõmba märkme pealt üle':'Pliiats');
+let tooriist=null;          /* null = kaart liigub ühe sõrmega, 'pliiats', 'kumm' */
+let joonAjalugu=[];         /* tagasivõtmiseks (piiratud, et telefoni mälu jätkuks) */
+const AJALOO_PIIR=8;
+function valiTooriist(t){
+  tooriist=(tooriist===t)?null:t;
+  kustukumm=(tooriist==='kumm');
+  uuendaTooriistad();
+  teade(tooriist==='pliiats'?'Pliiats: joonista ühe sõrmega':tooriist==='kumm'?'Kustukumm: tõmba märkme pealt üle':'Kaart liigub ühe sõrmega');
+}
+function uuendaTooriistad(){
+  document.getElementById('fabPliiats').classList.toggle('aktiivne', tooriist==='pliiats');
+  document.getElementById('fabKustukumm').classList.toggle('aktiivne', tooriist==='kumm');
+  document.getElementById('fabTagasi').classList.toggle('tuhm', !joonAjalugu.length);
+  if(joonKanvas) joonKanvas.style.cursor=tooriist?'crosshair':'grab';
+}
+function lisaAjalukku(pilt){
+  joonAjalugu.push(pilt);
+  if(joonAjalugu.length>AJALOO_PIIR) joonAjalugu.shift();
+  uuendaTooriistad();
+}
+function votaTagasi(){
+  if(!joonKanvas) return;
+  if(!joonAjalugu.length){ teade('Rohkem pole tagasi võtta'); return; }
+  joonCtx.putImageData(joonAjalugu.pop(),0,0);
+  uuendaTooriistad();
+  teade('Viimane tegevus võeti tagasi');
 }
 function alustaJoonistus(){
   const img=document.getElementById('plaanImg');
@@ -1206,14 +1237,14 @@ function alustaJoonistus(){
   const ctx=c.getContext('2d');
   ctx.drawImage(img,0,0);
   const praegune=img.style.width||'100%';
-  c.style.cssText='width:'+praegune+'; border:2px dashed var(--punane); border-radius:8px; background:#fff; touch-action:none; cursor:crosshair;';
+  c.style.cssText='width:'+praegune+'; border:2px dashed var(--punane); border-radius:8px; background:#fff; touch-action:none; cursor:grab;';
   img.style.display='none';
   img.parentNode.insertBefore(c,img);
   joonKanvas=c; joonCtx=ctx;
   joonistaSildid(); document.getElementById('siltInfo').style.display='none';
   ctx.lineCap='round'; ctx.lineJoin='round';
   /* kustukummi jaoks: puhas originaal mustrina */
-  kustukumm=false;
+  kustukumm=false; tooriist=null; joonAjalugu=[];
   origMuster=null;
   const m0=pk();
   const origSrc=(plaanid[m0]&&plaanid[m0].orig&&plaanid[m0].orig[aktiivneLeht])||img.src;
@@ -1236,20 +1267,24 @@ function alustaJoonistus(){
     const r=c.getBoundingClientRect();
     return [(ev.clientX-r.left)*c.width/r.width,(ev.clientY-r.top)*c.height/r.height];
   };
-  /* mitme sõrme tugi: 1 sõrm joonistab, 2 sõrme suumib */
+  /* 1 sõrm: tööriistaga joonistab, ilma tööriistata liigutab kaarti; 2 sõrme suumib */
   const sormed=new Map();
-  let snapshot=null, suumBaas=null, laiusBaas=null;
+  let snapshot=null, suumBaas=null, laiusBaas=null, viimane=null, joonteLiikus=false;
   const praeguneLaius=()=>parseFloat(c.style.width)||100;
   const alusta=ev=>{
     sormed.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
     if(sormed.size===1){
-      snapshot=joonCtx.getImageData(0,0,c.width,c.height);
-      seaJoon();
-      joonistan=true; const [x,y]=koht(ev); joonCtx.beginPath(); joonCtx.moveTo(x,y);
+      viimane={x:ev.clientX,y:ev.clientY};
+      if(tooriist){
+        snapshot=joonCtx.getImageData(0,0,c.width,c.height); joonteLiikus=false;
+        seaJoon();
+        joonistan=true; const [x,y]=koht(ev); joonCtx.beginPath(); joonCtx.moveTo(x,y);
+      }
+      c.setPointerCapture(ev.pointerId);
     }else if(sormed.size===2){
       /* teine sõrm: tühista pooleliolev joon ja alusta suumi */
-      if(snapshot) joonCtx.putImageData(snapshot,0,0);
-      joonistan=false;
+      if(snapshot && joonistan) joonCtx.putImageData(snapshot,0,0);
+      joonistan=false; snapshot=null; viimane=null;
       const p=[...sormed.values()];
       suumBaas=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
       laiusBaas=praeguneLaius();
@@ -1274,24 +1309,33 @@ function alustaJoonistus(){
       cont.scrollLeft += (r1.width-r0.width)*fx;
       cont.scrollTop  += (r1.height-r0.height)*fy;
     }else if(sormed.size===1 && joonistan){
-      const [x,y]=koht(ev); joonCtx.lineTo(x,y); joonCtx.stroke();
+      const [x,y]=koht(ev); joonCtx.lineTo(x,y); joonCtx.stroke(); joonteLiikus=true;
+    }else if(sormed.size===1 && !tooriist && viimane){
+      const cont=document.getElementById('plaanPilt');
+      cont.scrollLeft -= (ev.clientX-viimane.x);
+      cont.scrollTop  -= (ev.clientY-viimane.y);
+      viimane={x:ev.clientX,y:ev.clientY};
     }
     ev.preventDefault();
   };
   const lopp=ev=>{
     sormed.delete(ev.pointerId);
     if(sormed.size<2){ suumBaas=null; }
-    if(sormed.size===0){ joonistan=false; snapshot=null; }
+    if(sormed.size===0){
+      if(joonistan && snapshot){
+        if(!joonteLiikus){ const [x,y]=koht(ev); joonCtx.lineTo(x+0.1,y+0.1); joonCtx.stroke(); } /* puudutus = täpp */
+        lisaAjalukku(snapshot);
+      }
+      joonistan=false; snapshot=null; viimane=null;
+    }
   };
   c.addEventListener('pointerdown',alusta); c.addEventListener('pointermove',liigu);
   c.addEventListener('pointerup',lopp); c.addEventListener('pointercancel',lopp); c.addEventListener('pointerleave',lopp);
   document.getElementById('fabJoonista').style.display='none';
-  document.getElementById('fabSalvesta').style.display='flex';
-  document.getElementById('fabTyhista').style.display='flex';
-  document.getElementById('fabKustukumm').style.display='flex';
-  document.getElementById('fabPuhasta').style.display='flex';
+  ['fabPliiats','fabKustukumm','fabTagasi','fabPuhasta','fabTyhista','fabSalvesta'].forEach(id=>document.getElementById(id).style.display='flex');
+  uuendaTooriistad();
   kinnitaFabid();
-  teade('Joonista ühe sõrmega, suumi kahega; lõpuks ✓');
+  teade('Vali ✏ Pliiats või 🧽 Kustukumm; ilma valikuta liigub kaart');
 }
 function lopetaJoonistus(salvesta){
   if(!joonKanvas) return;
@@ -1307,12 +1351,9 @@ function lopetaJoonistus(salvesta){
   joonKanvas.remove(); joonKanvas=null; joonCtx=null; joonistan=false;
   img.style.display='';
   document.getElementById('fabJoonista').style.display='flex';
-  document.getElementById('fabSalvesta').style.display='none';
-  document.getElementById('fabTyhista').style.display='none';
-  document.getElementById('fabKustukumm').style.display='none';
-  document.getElementById('fabKustukumm').classList.remove('aktiivne');
-  document.getElementById('fabPuhasta').style.display='none';
-  kustukumm=false;
+  ['fabPliiats','fabKustukumm','fabTagasi','fabPuhasta','fabTyhista','fabSalvesta'].forEach(id=>document.getElementById(id).style.display='none');
+  kustukumm=false; tooriist=null; joonAjalugu=[];
+  uuendaTooriistad();
   kinnitaFabid();
   joonistaSildid();
 }
