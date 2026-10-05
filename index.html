@@ -128,7 +128,7 @@
   .fab.mini{height:40px; padding:0 16px; font-size:.9rem; background:var(--sinine); color:#fff;}
   /* tööriistad: valimata = valge, valitud = täisvärv + valge rõngas (Material: Orange 700, Purple 700) */
   #fabPliiats,#fabKustukumm,#fabPuhasta,#fabLisa{display:none;}
-  #fabLisa{background:#fff; color:#d22b2b; border:3px solid #d22b2b; font-size:1.7rem; font-weight:800; padding:0 14px; gap:8px;} #fabLisa img{width:32px; height:32px; border-radius:5px;} #fabLisa.uks{color:#1c63b7; border-color:#1c63b7;} #fabLisa.aktiivne{background:#1da747; color:#fff; border:3px solid #0f6e2f;}
+  #fabLisa{background:#fff; color:#111; border:3px solid #d22b2b; font-size:1.7rem; font-weight:800; padding:0 14px; gap:8px;} #fabLisa img{width:32px; height:32px; border-radius:5px;} #fabLisa.uks{border-color:#1c63b7;} #fabLisa.aktiivne{background:#1da747; color:#fff; border:3px solid #0f6e2f;}
   /* heledad toonid; vajutades / sisselülitatuna tume */
   #fabPliiats{background:#e3eefb; color:#1c63b7; border:2px solid #1c63b7;}
   #fabPliiats.aktiivne{background:#1c63b7; color:#fff;}
@@ -447,7 +447,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-Y</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-Z</div>
   </div>
 </div>
 
@@ -514,7 +514,7 @@
     <div class="kuupRida"><input type="date" id="vHooldus"></div>
     <div class="valjaInfo" id="iHooldus"></div>
     </div></div>
-    <label>Olek</label>
+    <label id="lOlek">Olek</label>
     <div class="olekNupud">
       <button type="button" class="olekNupp korras" id="olekKorras" onclick="valiOlek('korras')">✓ Korras</button>
       <button type="button" class="olekNupp puudus" id="olekPuudus" onclick="valiOlek('puudus')">✗ Puudus</button>
@@ -2125,6 +2125,8 @@ function lylitaPuudus(t){
 }
 function valiOlek(o){
   vormOlek=(vormOlek===o)?'':o;
+  /* Puudus: leht kerib üles, et kiirnupud, märkus ja foto oleksid kohe näha */
+  if(vormOlek==='puudus') setTimeout(()=>{ const l=document.getElementById('lOlek'); if(l) l.scrollIntoView({behavior:'smooth', block:'start'}); },60);
   /* Puudus → Korras: kiirnupuga lisatud puuduse tekst kustutatakse (ise kirjutatud lisainfo jääb) */
   if(vormOlek==='korras'){
     const vm=document.getElementById('vMarkus');
