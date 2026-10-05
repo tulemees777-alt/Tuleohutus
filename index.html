@@ -491,7 +491,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AK</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AL</div>
   </div>
 </div>
 
@@ -1877,8 +1877,7 @@ function uuendaTooriistad(){
   document.getElementById('fabLisa').classList.toggle('aktiivne', tooriist==='lisa');
   document.getElementById('fabHn').classList.toggle('aktiivne', tooriist==='hn');
   document.getElementById('fabNool').classList.toggle('aktiivne', tooriist==='nool');
-  /* Kustukumm tuleb Pliiatsi kõrvale ainult siis, kui pliiats/kumm on valitud */
-  document.getElementById('fabKustukumm').style.display=(joonKanvas&&(tooriist==='pliiats'||tooriist==='kumm'))?'flex':'none';
+  document.getElementById('fabKustukumm').style.display=joonKanvas?'flex':'none';   /* kustukumm alati pliiatsi kõrval */
   renderPluss();
   setTimeout(kinnitaFabid,0);
   if(joonKanvas) joonKanvas.style.cursor=(tooriist==='pliiats'||tooriist==='kumm')?'crosshair':'grab';
