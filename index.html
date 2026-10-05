@@ -128,7 +128,23 @@
   #fabTyhista{bottom:78px; background:var(--punane); display:none;}
   .fab.mini{height:40px; padding:0 16px; font-size:.9rem; background:var(--sinine); color:#fff;}
   /* tööriistad: valimata = valge, valitud = täisvärv + valge rõngas (Material: Orange 700, Purple 700) */
-  #fabPliiats,#fabKustukumm,#fabPuhasta,#fabLisa{display:none;}
+  #fabPliiats,#fabKustukumm,#fabPuhasta,#fabLisa,#fabHn,#fabNool{display:none;}
+  .fabPluss{background:#fff!important; color:#111!important; border:3px solid #d22b2b!important; padding:0 14px 0 12px!important; gap:6px; font-weight:800;}
+  .fabPluss .plus{font-size:1.7rem; line-height:1; font-weight:800;} .fabPluss img{width:32px; height:32px; border-radius:4px; display:block;}
+  .fabPluss.roheline{border-color:#2e9b48!important;} .fabPluss.uks{border-color:#1c63b7!important;}
+  .fabPluss.aktiivne{background:#1da747!important; color:#fff!important; border-color:#0f6e2f!important;}
+  #plaanKiht .ymark{position:absolute; --ik:calc(var(--f,.81) * 2.2cqw); width:var(--ik); height:var(--ik); transform:translate(-50%,-50%); z-index:2; touch-action:none;}
+  #plaanKiht .ymark img{width:100%; height:100%; display:block;}
+  #plaanKiht .ymark.valitudY{outline:3px solid #1c63b7; outline-offset:3px; border-radius:2px; box-shadow:0 0 0 7px rgba(28,99,183,.25);}
+  #plaanVaade.paigutus #plaanKiht .ymark.aktiiv{pointer-events:auto; cursor:grab;}
+  #plaanKiht .teine{position:absolute; --ik:calc(var(--f,.81) * 2.2cqw); width:var(--ik); height:var(--ik); transform:translate(-50%,-50%); opacity:.42; pointer-events:none; z-index:0;}
+  #plaanKiht .teine img{width:100%; height:100%; display:block;}
+  #plaanKiht .teine span, #plaanKiht .teineSilt{position:absolute; left:50%; top:100%; transform:translate(-50%,2px); white-space:nowrap; font-weight:800; font-size:calc(var(--f,.81) * 1cqw); line-height:1; padding:.15em .35em; background:#fff; color:#334; border:1px solid #889; border-radius:.3em;}
+  #plaanKiht .teineSilt{top:auto; opacity:.42; pointer-events:none; transform:translate(-50%,-50%); position:absolute;}
+  .suunaVorgustik{display:grid; grid-template-columns:repeat(3,64px); gap:8px; justify-content:center; margin:4px 0 10px;}
+  .suunaVorgustik button{height:56px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:2px solid #c4cfdc; background:#fff; padding:0;}
+  .suunaVorgustik button.v{border-color:#1da747; background:#e3f6e9;} .suunaVorgustik img{width:38px; height:38px;}
+  .teisedNupp{border:2px solid #c4cfdc; background:#fff; border-radius:16px; padding:4px 10px; font-weight:700; font-size:.8rem; color:#345; cursor:pointer;} .teisedNupp.v{border-color:#1c63b7; background:#e8f0fb; color:#1c63b7;}
   #fabLisa{background:#fff; color:#111; border:3px solid #d22b2b; font-size:1.05rem; font-weight:700; padding:0 18px 0 10px; gap:8px;} #fabLisa img{width:30px; height:30px; border-radius:5px;} #fabLisa .lisaTekst{font-size:1.05rem; color:#111;} #fabLisa.aktiivne .lisaTekst{color:#fff;} #fabLisa.uks{border-color:#1c63b7;} #fabLisa.aktiivne{background:#1da747; color:#fff; border:3px solid #0f6e2f;}
   /* heledad toonid; vajutades / sisselülitatuna tume */
   #fabPliiats{background:#e3eefb; color:#1c63b7; border:2px solid #1c63b7;}
@@ -457,7 +473,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AH</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AI</div>
   </div>
 </div>
 
@@ -482,8 +498,10 @@
   <div id="plaanPilt"><div id="siltInfoHoidja"><div id="siltInfo"></div></div><img id="plaanImg" src="" alt="Paiknemisskeem"><div id="plaanKiht"></div></div>
   <button class="fab" id="fabJoonista" onclick="alustaJoonistus()" title="Märgi joonisele">✎ Muuda</button>
   <button class="fab" id="nupTagasiVota" onclick="votaTagasi()" title="Võta viimane tegevus tagasi" disabled><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.2 6.6A7.5 7.5 0 1 1 4.6 13"/><path d="M3.6 4.2v5h5"/></svg></button>
-  <button class="fab tool" id="fabLisa" onclick="valiTooriist('lisa')" title="Lisa skeemile"><img id="fabLisaIk" alt=""><span class="lisaTekst">+ Lisa</span></button>
-  <button class="fab tool" id="fabPliiats" onclick="valiTooriist('pliiats')" title="Pliiats (vajuta uuesti, et kaarti liigutada)">✏ Pliiats</button>
+  <button class="fab tool fabPluss" id="fabLisa" onclick="valiTooriist('lisa')" title="Lisa skeemile"><span class="plus">+</span><img id="fabLisaIk" alt=""></button>
+  <button class="fab tool fabPluss" id="fabHn" onclick="valiTooriist('hn')" title="Lisa häirenupp (ATS)"><span class="plus">+</span><img src="data:image/png;base64,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" alt="häirenupp"></button>
+  <button class="fab tool fabPluss roheline" id="fabNool" onclick="valiTooriist('nool')" title="Lisa evakuatsiooninool"><span class="plus">+</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAACMCAIAAAAhotZpAAAHzElEQVR42u3d/XMU5QEH8Odl7243udxd7jBatCgpNDIqWmmpTafUEYamiiTQ6TijM9DRacdaZ/piMhIdRqUkNQSNJDg4KBWK8uJMdWSmrbZJDNCJGqWKhaEMUgoK5S25u1xye7nb53n6w1qGdnAIyV5uz/1+/4Ld/dw932ef57mEzny+hiDuDsMjABICJCAhQEKABCQESAiQgIQACUgIkBAgAQkBEgIkICFAQoAEJARIQEKAhAAJSAiQECABCQESkBAgIUD6vDukjBIKJPeGUjqcSwslGGVAch8PoTlpRfXwI9UPaEwzcxmNcSC50Skrcj+a+cONC1Z/qawikRnUmAYkNzoNZJI3Xj5j+6K1c6bccjYd50VYUV/8iYPGuFSyoiS24Y4n77/57uRISipZXBXliSk4o0woSSltrH6gde4jlFLTKqaK8sp7EqOUECqUWFxVs3lh25TQ5HhmsFicPPQySwnhlAslZlZcu7WuY+413+43E4wySimQ3BVOuVQyZkTW3978s1lLUtkhIQV3d0V5cVmIUaaUIoo03PKTp+ct16g2nDPdPPR5dO2OUkopFUosnD7vpbpnKiNT4pmka508vcBqV9R1k6ZvrWv/XuV3XVtRXl8FtysqoofW1az8+TfuTWWHhRScciC5saKUUr+cfW/7/Mf93DeUS7tq6APSeRUlxe1fuXVLbftXo9cMmC6qKCCdN/QxLpSoilVuqW1fMH3uWTNBKWUuqCggXaCiQoFgx/zHG77543TWzEmr4BUFpAtXlFTqwa8vXVuzwtD0oexwYfc4gHThimKUCinmT/3O1rqOGZOmDZgJjXEKJHdW1LTyq7fUrVlUNb/fTJACVRSQLl5Rpb6Sp+ctX1b9UzOXyYoCVBSQRllR8v6v3bPu+01Bf2kqOzTBFQWkUVYUE1LcdvW3ttW1z6y4tt+Mc8YnbBt+7J8IXrgiHdWTJVQRxZ17IbUramrkyy/VPvPYrrZXDvwhEggxyqSSLkVSRA2YCaWUm5Fy0lL2noSjFWVo+qrbGquila3vrOeMBbSAkMJdSJRQoaShBe6bfVeA+xVRrj18Yz9QnQfsy3asoohSSt13013TY1OXdbecSfeHAmWWtPL4gbvU/1Vhf0JjemTXkle8XFRCCs74scET9V1Nfcf3RksiUkoHv7XODHfxTLLMH3TzN4nY5xrys05qV9SU0OTNC9ue2L1m6/4doUAwTxU1romDxrjLkSbgLSrA/c23NlTFKlt61xFK9TxUFKbgDlSUUHLpDT944Y6WmBEZzKQc3+MAkgPTSE6ZkKL6qlnb6jpmX3lTv5ng1Mm3KCA5WVFXll2x6c7VS25YHB9JSqKcOswMJIcrysd8K+b8auWceiFFxhpxZNoCpLxU1D3X1764oLWiNJZ0oqKAlK+Kmj35xu2L1lZfdfOZ9AAbXz8BKX8VJa8ovWzjnU89OGtpRmTHc5wPSEUQDY8gH7EXjU4On2noat557N2YHpHjWIwGksNRREmlOON9J/Y2dDd/OnjyspKoNb41CCA5GfuHnpzSLfteb+p9VioZ1susca8SAcm5IU4JTnlO5n79147N+14r8wf91OfIOh6QnCyh46lTDd3NvZ/uieoRqaRTK+JAcqyEeo//7eHu3/w7dTpmRCxHF8KB5EwJbfr77+2tipATJeQYkpDCksKzm37nSmhEZM/f9MvHeQdtrDdPy/UwSuiz7fMTe6NGREqZp5NDY0FilGXEyJr3XiyKgyh3X18b4H5nS0gpxRnf9UmffRAlZpTn9SCKNoZLZJRmxEhb3wb3H+mKGZHFM2oc/DDZJUQp3fDhdvtIV1kgmFehcQ13USPi8sOROWmV62EHv+h2CZlW5tzhSPv3gfm+l3FNHIi7kSwpHLxIu4SOJD+p72zac3JfXksIU/BLLyGl7BPL3Uffbnxr1YAZz3cJAWlMJUTocx+83PbuBo1pZf7gRAoBaVQlNJxLL9/51KsH34zoIUqIUBM9zgPpIiX0cfzoQ11NH506EDMiQgpZiCsB0ueVEOGM//nI7kd7WpOZVNSITPAQB6TRlBBZ+/6m9vc2+jVf0F9aQCEgXbiEBkeGHt25esehzvIClRCQLlJCB/v/+VDXyv1nDk0yIpYUblhTAdJnJUQI4Yz/8XDP8p2rU9l01AhbrnlbBxI59xeo2/p+++ye3xlaIOgrsdy0nuJ1JLuEEpnBxp5VfzrcU66HFVEFLyEg/b/Q/rOH6jubDg4cdnzbG0hOlBDlOw51PrarLZ0zy/Ww5dYlYy8i2SWkiGp9Z/1zH7xcoumlPsNy8aK+55DsIa7fTCx7q+UvR3b/t4Skm6/ZQ0iKEKkEp/yj0/+o72r6OH7UtSXkUSSpFKOEU/7qwTee2L1mRGTL9VBRCHkFSSrJKZNKPvn2uhc+3FbqKzE0vViEPIFkScEoO53uf7i7pftfvTEjLJWS7i4hbyEpoqJ6eO+pA7/oXHEseXxSSXlh17PHFn75wmlfSB5KqFAiHChThDT2rIqbyVAgWERD3P/cy6X+Aagiuz1KzVzGz30a04priPPScKdUic9QxVZCnps4FDWPHfz6HEgIkICEAAkBEpAQICFAAhICJCAhQEKABCQESAiQgIQACQESkBAgAQkBEgIkICFAQoAEJARIQEKAhIw1/wGCXJns88ZcDAAAAABJRU5ErkJggg==" alt="evakuatsiooninool"></button>
+  <button class="fab tool" id="fabPliiats" onclick="valiTooriist('pliiats')" title="Pliiats (vajuta uuesti, et kaarti liigutada)">✏ Pliiats ▸</button>
   <button class="fab tool" id="fabKustukumm" onclick="valiTooriist('kumm')" title="Kustukumm (vajuta uuesti, et kaarti liigutada)">🧽 Kustukumm</button>
   <button class="fab" id="fabPuhasta" onclick="this.classList.add('vajutatud'); puhastaLeht()" title="Kustuta selle lehe kõik märkmed">🗑 Puhasta</button>
   <button class="fab" id="fabSalvesta" onclick="this.classList.add('vajutatud'); setTimeout(()=>lopetaJoonistus(true),30)" title="Salvesta joonis">✓ Salvesta</button>
@@ -1330,6 +1348,8 @@ function joonistaSildid(){
     d.dataset.kood=kood;
     kiht.appendChild(d);
   }
+  joonistaYhised(kiht, maja, m);
+  if(teisedNahtav) joonistaTeised(kiht, maja, m, S, j);
   if(filtriVarv) kiht.dataset.filter=filtriVarv; else delete kiht.dataset.filter;
   kiht.style.setProperty('--s', Math.max(1,S.suurus||1));
   kiht.style.setProperty('--f', margiCqw(S,j).toFixed(4));
@@ -1345,8 +1365,137 @@ function joonistaSildid(){
     b.onclick=()=>valiVarv(v);
     rl.appendChild(b);
   });
+  const tn=document.createElement('button'); tn.type='button'; tn.className='teisedNupp'+(teisedNahtav?' v':'');
+  tn.textContent=(teisedNahtav?'✓ ':'')+'Teised liigid'; tn.title='Näita ka teiste liikide märke tuhmilt';
+  tn.onclick=()=>{ teisedNahtav=!teisedNahtav; try{ localStorage.setItem('rovalis_teised', teisedNahtav?'1':''); }catch(e){} joonistaSildid(); };
+  rl.appendChild(tn);
   riba.style.display='flex';
 }
+/* ======================================================================
+   ÜHISED MÄRGID (häirenupp, evakuatsiooninool) – maja + korruse juures, näha kõigil liikidel
+   ====================================================================== */
+let YHISED={}; try{ YHISED=JSON.parse(localStorage.getItem('rovalis_yhised_v1')||'{}')||{}; }catch(e){ YHISED={}; }
+function salvestaYhised(){ try{ localStorage.setItem('rovalis_yhised_v1', JSON.stringify(YHISED)); }catch(e){ teade('Salvestamine ebaõnnestus'); } }
+let teisedNahtav=false; try{ teisedNahtav=localStorage.getItem('rovalis_teised')==='1'; }catch(e){}
+const IK_HN=document.querySelector('#fabHn img').getAttribute('src');
+const NOOLE_TEE='M76 238 H300 V140 L476 280 L300 420 V322 H76 Z';
+function nooleSvgUrl(s){ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560"><rect width="560" height="560" fill="#2e9b48"/><path d="'+NOOLE_TEE+'" fill="#fff" transform="rotate('+(s||0)+' 280 280)"/></svg>'); }
+const nooleVahemalu={};
+function noolePng(s){
+  s=s||0; if(nooleVahemalu[s]) return Promise.resolve(nooleVahemalu[s]);
+  return new Promise(ok=>{ const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'); c.width=c.height=280; c.getContext('2d').drawImage(im,0,0,280,280); nooleVahemalu[s]=c.toDataURL('image/png'); ok(nooleVahemalu[s]); }; im.onerror=()=>ok(null); im.src=nooleSvgUrl(s); });
+}
+function korruseYhised(maja, nimi, loo){
+  const v=korruseVoti(nimi).voti;
+  if(loo){ YHISED[maja]=YHISED[maja]||{}; YHISED[maja][v]=YHISED[maja][v]||[]; }
+  return ((YHISED[maja]||{})[v])||[];
+}
+function praeguneKorrusNimi(){ return leheNimi(pk(), aktiivneLeht); }
+function joonistaYhised(kiht, maja, m){
+  korruseYhised(maja, leheNimi(m, aktiivneLeht)).forEach(y=>{
+    const d=document.createElement('div'); d.className='ymark'+(paigutus.aktiivne&&paigutus.ymark===y.id?' aktiiv valitudY':''); d.dataset.yid=y.id;
+    d.style.left=(y.x*100)+'%'; d.style.top=(y.y*100)+'%';
+    d.innerHTML='<img alt="" src="'+(y.t==='hn'?IK_HN:nooleSvgUrl(y.s))+'">';
+    kiht.appendChild(d);
+  });
+}
+/* teiste liikide märgid tuhmilt (sama korrus, sama joonis) */
+function joonistaTeised(kiht, maja, m, S, j){
+  const v=korruseVoti(leheNimi(m, aktiivneLeht)).voti, a0=S.laius/lehtKorgus(S,j);
+  ['tk','ttv','uks'].forEach(t=>{
+    if(t===skeemiTyyp) return;
+    const m2=maja+':'+t, S2=SKEEMI_SILDID[m2], P2=plaanid[m2]; if(!S2||!P2) return;
+    const i2=P2.lehed.findIndex((_,i)=>korruseVoti(leheNimi(m2,i)).voti===v); if(i2<0) return;
+    const j2=vaikeLeht(m2,i2); if(j2<0) return;
+    const K2=lehtKorgus(S2,j2); if(Math.abs(S2.laius/K2-a0)/a0>0.03) return;   /* joonis ei klapi */
+    for(const kood in S2.sildid){
+      const a=S2.sildid[kood]; if(a[0]!==j2||!a[7]) continue;
+      const l=leiaSeade(maja,kood); if(!l||l.s.kustutatud) continue;
+      if(a[8]){
+        const x=(a[10]!=null?a[10]:a[5])/S2.laius, y=(a[11]!=null?a[11]:a[6])/K2;
+        const d=document.createElement('div'); d.className='teine'; d.style.left=(x*100)+'%'; d.style.top=(y*100)+'%';
+        d.innerHTML='<img alt="" src="'+liigiIkoon(t)+'"><span></span>'; d.querySelector('span').textContent=kood; kiht.appendChild(d);
+      }else{
+        const d=document.createElement('div'); d.className='teineSilt'; d.style.left=(a[1]/S2.laius*100)+'%'; d.style.top=(a[2]/K2*100)+'%'; d.textContent=kood; kiht.appendChild(d);
+      }
+    }
+  });
+}
+function leiaYhine(e){
+  let leitud=null;
+  document.querySelectorAll('#plaanKiht .ymark').forEach(d=>{ const r=d.getBoundingClientRect();
+    if(e.clientX>=r.left-6&&e.clientX<=r.right+6&&e.clientY>=r.top-6&&e.clientY<=r.bottom+6) leitud=d.dataset.yid; });
+  return leitud;
+}
+function leiaYhineAndmed(id){
+  const maja=valitudMaja(), K=YHISED[maja]||{};
+  for(const v in K){ const i=K[v].findIndex(y=>y.id===id); if(i>=0) return {nimekiri:K[v], i, y:K[v][i]}; }
+  return null;
+}
+function lisaYhine(e, t){
+  const S=seadmeSkeem(); if(!S) return;
+  const pt=plaaniPunkt(e), K=lehtKorgus(S,pt.j);
+  if(pt.x<0||pt.y<0||pt.x>S.laius||pt.y>K) return;
+  ajaluguLisa();
+  const id='y'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  korruseYhised(valitudMaja(), praeguneKorrusNimi(), true).push({id, t, x:+(pt.x/S.laius).toFixed(5), y:+(pt.y/K).toFixed(5), s:0});
+  salvestaYhised();
+  paigutus.mark=null; paigutus.ymark=id;
+  if(tooriist===t) valiTooriist(t);   /* tööriist maha, nagu kustuti lisamisel */
+  joonistaSildid();
+  teade((t==='hn'?'Häirenupp':'Evakuatsiooninool')+' lisatud – kõigil liikidel. Lohista või puuduta uuesti (menüü)');
+}
+async function yhineMenyy(id){
+  const L=leiaYhineAndmed(id); if(!L) return;
+  if(L.y.t==='hn'){
+    const v=await kysi('Häirenupp', 'Lohistades liigub. See märk on kõigil selle korruse skeemidel.', [{tekst:'🗑 Kustuta häirenupp', klass:'ohtlik', vaartus:'k'},{tekst:'Tühista', klass:'peamine', vaartus:null}]);
+    if(v==='k') kustutaYhine(id);
+    return;
+  }
+  const v=await kysiSuund(L.y.s||0);
+  if(v==='k'){ kustutaYhine(id); return; }
+  if(v!=null && v!==(L.y.s||0)){ ajaluguLisa(); L.y.s=v; salvestaYhised(); joonistaSildid(); }
+}
+function kustutaYhine(id){
+  const L=leiaYhineAndmed(id); if(!L) return;
+  ajaluguLisa(); L.nimekiri.splice(L.i,1); salvestaYhised(); paigutus.ymark=null; joonistaSildid(); teade('Kustutatud');
+}
+/* suuna valik: 8 suunda, 0 = paremale */
+function kysiSuund(praegu){
+  return new Promise(res=>{
+    const k=document.getElementById('kysiKate'), t=document.getElementById('kysiTekst'), n=document.getElementById('kysiNupud');
+    t.innerHTML='Evakuatsiooninool<span class="vaike">Vali suund · lohistades liigub</span>';
+    const sd=[225,270,315,180,null,0,135,90,45], avatud=Date.now();
+    n.innerHTML='<div class="suunaVorgustik">'+sd.map(x=>x===null?'<span></span>':'<button type="button" data-s="'+x+'" class="'+(x===praegu?'v':'')+'"><img alt="" src="'+nooleSvgUrl(x)+'"></button>').join('')+'</div>'
+      +'<button class="ohtlik" data-v="k">🗑 Kustuta nool</button><button class="tavaline" data-v="x">Valmis</button>';
+    n.querySelectorAll('button').forEach(b=>b.onclick=()=>{ if(Date.now()-avatud<450) return; k.style.display='none';
+      res(b.dataset.s!==undefined?+b.dataset.s:(b.dataset.v==='k'?'k':null)); });
+    k.style.display='flex';
+  });
+}
+/* ühise märgi lohistamine Muuda ajal */
+(function(){
+  const kiht=document.getElementById('plaanKiht'); let l=null;
+  kiht.addEventListener('pointerdown',e=>{
+    if(!paigutus.aktiivne) return; const d=e.target.closest('.ymark'); if(!d) return;
+    e.preventDefault(); e.stopPropagation();
+    const kr=kiht.getBoundingClientRect(), r=d.getBoundingClientRect();
+    l={d, id:d.dataset.yid, x:e.clientX, y:e.clientY, liikus:false, s0:[(r.left+r.width/2-kr.left)/kr.width*100,(r.top+r.height/2-kr.top)/kr.height*100]};
+    try{ d.setPointerCapture(e.pointerId); }catch(er){}
+  });
+  kiht.addEventListener('pointermove',e=>{
+    if(!l) return; if(!l.liikus && Math.hypot(e.clientX-l.x,e.clientY-l.y)<5) return;
+    l.liikus=true; const kr=kiht.getBoundingClientRect();
+    l.px=Math.max(0,Math.min(100,l.s0[0]+(e.clientX-l.x)/kr.width*100)); l.py=Math.max(0,Math.min(100,l.s0[1]+(e.clientY-l.y)/kr.height*100));
+    l.d.style.left=l.px+'%'; l.d.style.top=l.py+'%';
+  });
+  const lopp=e=>{
+    if(!l) return; const x=l; l=null;
+    if(x.liikus){ const L=leiaYhineAndmed(x.id); if(L){ ajaluguLisa(); L.y.x=+(x.px/100).toFixed(5); L.y.y=+(x.py/100).toFixed(5); salvestaYhised(); } joonistaSildid(); }
+    else if(e.type==='pointerup') yhineMenyy(x.id);
+  };
+  kiht.addEventListener('pointerup',lopp); kiht.addEventListener('pointercancel',lopp);
+})();
 /* korraga üks värv; sama nupu uuesti vajutamine näitab jälle kõiki */
 function valiVarv(v){
   filtriVarv=(filtriVarv===v)?null:v;
@@ -1429,6 +1578,10 @@ function leiaPuudutatud(e){
 }
 /* Muuda-režiimis: 1. puudutus valib märgi/tähise (sinine ring), siis saab seda lohistada; Lisa-tööriistaga tühi koht → uus seade */
 function muudaPuudutus(e){
+  const yh=leiaYhine(e);
+  if(yh){ if(yh!==paigutus.ymark){ paigutus.ymark=yh; paigutus.mark=null; paigutus.liiguta=null; joonistaSildid(); } else yhineMenyy(yh); return; }
+  if(tooriist==='hn'||tooriist==='nool'){ lisaYhine(e, tooriist); return; }
+  if(paigutus.ymark){ paigutus.ymark=null; joonistaSildid(); if(!paigutus.lisa) return; }
   const leitud=leiaPuudutatud(e);
   if(leitud && leitud!==paigutus.mark){ paigutus.mark=leitud; paigutus.liiguta=null; joonistaSildid(); renderPaigutus(); return; }
   if(leitud) return;
@@ -1515,7 +1668,7 @@ function kinnitaFabid(){
   const sc=vv.scale||1;
   const kylili=window.matchMedia('(orientation:landscape) and (max-height:520px)').matches;
   /* „Muuda“ külili paremas külgribas; tööriistad alati kaardi vasakus servas üksteise all */
-  const jrk=['fabSalvesta','fabPuhasta','fabKustukumm','fabPliiats','fabLisa','nupTagasiVota'];   /* alt üles */
+  const jrk=['fabSalvesta','fabPliiats','fabNool','fabHn','fabLisa','nupTagasiVota'];   /* alt üles; Kustukumm Pliiatsi kõrval */
   const pp=document.getElementById('paigPaneel');
   const samm=kylili?45:58, alg=(kylili?8:16)+((!kylili&&pp&&pp.style.display==='block')?pp.offsetHeight:0);
   const fabid=[['fabJoonista',kylili?8:16,'v']].concat(jrk.map((id,i)=>[id,alg+i*samm,kylili?'v2':'v']));
@@ -1531,6 +1684,9 @@ function kinnitaFabid(){
     el.style.bottom='auto';
     el.style.transform='scale('+(1/sc)+')';
   });
+  const pl=document.getElementById('fabPliiats'), kk=document.getElementById('fabKustukumm');
+  if(pl&&kk){ kk.style.top=pl.style.top; kk.style.bottom='auto'; kk.style.transform=pl.style.transform; kk.style.transformOrigin='0 0'; pl.style.transformOrigin='0 0';
+    kk.style.left=(parseFloat(pl.style.left)+((pl.offsetWidth||110)+10)/sc)+'px'; }
 }
 if(window.visualViewport){
   visualViewport.addEventListener('resize', kinnitaFabid);
@@ -1602,18 +1758,23 @@ function valiTooriist(t){
   tooriist=(tooriist===t)?null:t;
   kustukumm=(tooriist==='kumm');
   if(paigutus.aktiivne){
-    if(tooriist==='pliiats'||tooriist==='kumm'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; }
+    if(tooriist==='pliiats'||tooriist==='kumm'||tooriist==='hn'||tooriist==='nool'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.ymark=null; }
     lisaReziim(tooriist==='lisa');
     joonistaSildid();
   }
   uuendaTooriistad();
   const nimi=({tk:'kustuti',ttv:'voolik',uks:'uks'}[skeemiTyyp]||'seade');
-  teade(tooriist==='pliiats'?'Pliiats: joonista ühe sõrmega':tooriist==='kumm'?'Kustukumm: tõmba märkme pealt üle':tooriist==='lisa'?('Puuduta plaanil kohta, kuhu '+nimi+' panna'+(paigutus.ilmaPaneelita?' – küsin numbrit':'')):'Kaart liigub ühe sõrmega');
+  teade(tooriist==='pliiats'?'Pliiats: joonista ühe sõrmega':tooriist==='kumm'?'Kustukumm: tõmba märkme pealt üle':tooriist==='hn'?'Puuduta plaanil kohta, kuhu häirenupp panna':tooriist==='nool'?'Puuduta plaanil kohta, kuhu evakuatsiooninool panna':tooriist==='lisa'?('Puuduta plaanil kohta, kuhu '+nimi+' panna'+(paigutus.ilmaPaneelita?' – küsin numbrit':'')):'Kaart liigub ühe sõrmega');
 }
 function uuendaTooriistad(){
   document.getElementById('fabPliiats').classList.toggle('aktiivne', tooriist==='pliiats');
   document.getElementById('fabKustukumm').classList.toggle('aktiivne', tooriist==='kumm');
   document.getElementById('fabLisa').classList.toggle('aktiivne', tooriist==='lisa');
+  document.getElementById('fabHn').classList.toggle('aktiivne', tooriist==='hn');
+  document.getElementById('fabNool').classList.toggle('aktiivne', tooriist==='nool');
+  /* Kustukumm tuleb Pliiatsi kõrvale ainult siis, kui pliiats/kumm on valitud */
+  document.getElementById('fabKustukumm').style.display=(joonKanvas&&(tooriist==='pliiats'||tooriist==='kumm'))?'flex':'none';
+  setTimeout(kinnitaFabid,0);
   if(joonKanvas) joonKanvas.style.cursor=(tooriist==='pliiats'||tooriist==='kumm')?'crosshair':'grab';
 }
 
@@ -1715,7 +1876,7 @@ function alustaJoonistus(){
       cont.scrollTop  += (r1.height-r0.height)*fy;
     }else if(sormed.size===1 && joonistan){
       const [x,y]=koht(ev); joonCtx.lineTo(x,y); joonCtx.stroke(); joonteLiikus=true;
-    }else if(sormed.size===1 && (!tooriist||tooriist==='lisa') && viimane){
+    }else if(sormed.size===1 && (!tooriist||tooriist==='lisa'||tooriist==='hn'||tooriist==='nool') && viimane){
       const cont=document.getElementById('plaanPilt');
       cont.scrollLeft -= (ev.clientX-viimane.x);
       cont.scrollTop  -= (ev.clientY-viimane.y);
@@ -1738,11 +1899,12 @@ function alustaJoonistus(){
   c.addEventListener('pointerdown',alusta); c.addEventListener('pointermove',liigu);
   c.addEventListener('pointerup',lopp); c.addEventListener('pointercancel',lopp); c.addEventListener('pointerleave',lopp);
   document.getElementById('fabJoonista').style.display='none';
-  ['fabPliiats','fabKustukumm','fabPuhasta','fabSalvesta'].forEach(id=>document.getElementById(id).style.display='flex');
+  ['fabPliiats','fabSalvesta'].forEach(id=>document.getElementById(id).style.display='flex');
+  ['fabKustukumm','fabPuhasta'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('plaanVaade').classList.add('muudan');
   ajalugu=[]; uuendaTagasiNupp(); document.getElementById('nupTagasiVota').style.display='flex';
 
-  if(alustaPaigutus()) document.getElementById('fabLisa').style.display='flex';
+  if(alustaPaigutus()) ['fabLisa','fabHn','fabNool'].forEach(id=>document.getElementById(id).style.display='flex');
   uuendaTooriistad();
   kinnitaFabid();
   teade('Vali tööriist; ilma valikuta liigub kaart. Märgi liigutamiseks puuduta seda, siis lohista');
@@ -1761,7 +1923,7 @@ function lopetaJoonistus(salvesta){
   joonKanvas.remove(); joonKanvas=null; joonCtx=null; joonistan=false;
   img.style.display='';
   document.getElementById('fabJoonista').style.display='flex';
-  ['fabPliiats','fabKustukumm','fabPuhasta','fabSalvesta','fabLisa','nupTagasiVota'].forEach(id=>document.getElementById(id).style.display='none');
+  ['fabPliiats','fabKustukumm','fabPuhasta','fabSalvesta','fabLisa','fabHn','fabNool','nupTagasiVota'].forEach(id=>document.getElementById(id).style.display='none');
   lopetaPaigutus(); ajalugu=[]; uuendaTagasiNupp();
   document.querySelectorAll('.vajutatud').forEach(b=>b.classList.remove('vajutatud'));
   document.getElementById('plaanVaade').classList.remove('muudan');
@@ -2657,6 +2819,7 @@ async function impordiSkeem(){
       await skeemPane(SKEEMI_KIRJED[x.pk]);
       uusi+=lisaPuuduvadSeadmed(m, t, Object.keys(x.S.sildid||{}));
     }
+    if(p.yhised){ YHISED[m]=p.yhised; salvestaYhised(); }
     salvestaAndmed();
     sulgeSkeemiImport();
     taidaMajaValik(m);
@@ -2705,7 +2868,7 @@ function ekspordiSkeem(){
     skeemid.push({pk:k, nimi:plaanid[k].nimi, S, lehed:plaanid[k].lehed, orig:plaanid[k].orig||plaanid[k].lehed});
   });
   if(!skeemid.length){ teade('Selle maja skeeme pole'); return; }
-  const p={tyyp:'rovalis-skeem', versioon:1, aeg:new Date().toISOString(), maja:m, majaAndmed:majad[m]||{}, skeemid};
+  const p={tyyp:'rovalis-skeem', versioon:1, aeg:new Date().toISOString(), maja:m, majaAndmed:majad[m]||{}, skeemid, yhised:YHISED[m]||{}};
   const blob=new Blob([JSON.stringify(p)],{type:'application/json'});
   const u=URL.createObjectURL(blob), l=document.createElement('a');
   const nimi='Skeemid '+m+' '+tanane()+'.rovalis.json';
@@ -3042,7 +3205,7 @@ function ajaluguPiira(){ let n=ajalugu.filter(x=>x.t==='j').length; while(n>6){ 
 function ajaluguLisa(){
   if(!joonKanvas) return;
   const m=valitudMaja(), S=seadmeSkeem(); if(!S) return;
-  ajalugu.push({t:'s', pk:pk(), ty:skeemiTyyp, sildid:JSON.stringify(S.sildid), suurus:S.suurus, paber:S.paber, list:JSON.stringify((andmed[m]||{})[skeemiTyyp]||[])});
+  ajalugu.push({t:'s', pk:pk(), ty:skeemiTyyp, sildid:JSON.stringify(S.sildid), suurus:S.suurus, paber:S.paber, list:JSON.stringify((andmed[m]||{})[skeemiTyyp]||[]), ym:m, yh:JSON.stringify(YHISED[m]||{})});
   ajaluguPiira();
 }
 function ajaluguJoon(img){ if(!joonKanvas||!img) return; ajalugu.push({t:'j', img}); ajaluguPiira(); }
@@ -3052,7 +3215,8 @@ async function votaTagasi(){
   const S=SKEEMI_SILDID[x.pk];
   if(S){ S.sildid=JSON.parse(x.sildid); S.suurus=x.suurus; S.paber=x.paber; naitaSuurus(S); await salvestaSkeem(x.pk); }
   const m=valitudMaja(); if(andmed[m]){ andmed[m][x.ty]=JSON.parse(x.list); salvestaAndmed(); }
-  paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null;
+  if(x.yh!==undefined){ YHISED[x.ym]=JSON.parse(x.yh); salvestaYhised(); }
+  paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.ymark=null;
   renderPaigutus(); joonistaSildid(); teade('Tagasi võetud');
 }
 /* märkide suurus: 3 kindlat valikut, kehtib kogu skeemile */
@@ -3482,6 +3646,10 @@ function prGeomeetria(doc, maja, leht, ala){
       tulem.push(e);
     }
   });
+  korruseYhised(maja, leht.nimi).forEach(y=>{
+    tulem.push({kood:y.t==='hn'?'Häirenupp':'Evak. nool', uid:y.id, t:y.t==='hn'?'y_hn':'y_nool_'+(y.s||0), v:'roheline', F:7/2.2,
+      ikoon:{x:ala.x+y.x*ala.w, y:ala.y+y.y*ala.h, s:7}, yhine:y.t});
+  });
   return tulem;
 }
 function prNool(cx,cy,r,tx,ty){
@@ -3491,8 +3659,8 @@ function prNool(cx,cy,r,tx,ty){
 }
 function prKattuvad(margid){
   const r=[];
-  margid.forEach(e=>{ if(e.ikoon) r.push({k:e.kood,t:e.t,x0:e.ikoon.x-e.ikoon.s/2,x1:e.ikoon.x+e.ikoon.s/2,y0:e.ikoon.y-e.ikoon.s/2,y1:e.ikoon.y+e.ikoon.s/2});
-    if(e.silt) r.push({k:e.kood,t:e.t,x0:e.silt.x,x1:e.silt.x+e.silt.w,y0:e.silt.y,y1:e.silt.y+e.silt.h}); });
+  margid.forEach(e=>{ if(e.ikoon) r.push({k:e.uid||e.kood,n:e.kood,t:e.t,x0:e.ikoon.x-e.ikoon.s/2,x1:e.ikoon.x+e.ikoon.s/2,y0:e.ikoon.y-e.ikoon.s/2,y1:e.ikoon.y+e.ikoon.s/2});
+    if(e.silt) r.push({k:e.uid||e.kood,n:e.kood,t:e.t,x0:e.silt.x,x1:e.silt.x+e.silt.w,y0:e.silt.y,y1:e.silt.y+e.silt.h}); });
   const paarid=[], nahtud=new Set(), v=0.3;
   for(let i=0;i<r.length;i++) for(let q=i+1;q<r.length;q++){ const a=r[i], b=r[q];
     if(a.k===b.k) continue;
@@ -3534,7 +3702,7 @@ async function koostaPrindiSkeem(){
   const kattuvad=[];
   lehed.forEach(L=>prKattuvad(L.margid).forEach(p=>kattuvad.push({nimi:L.leht.nimi, p, L})));
   if(kattuvad.length){
-    const tekst=kattuvad.slice(0,6).map(x=>x.nimi+': '+x.p[0].k+' ja '+x.p[1].k).join('\n')+(kattuvad.length>6?'\n… ja veel '+(kattuvad.length-6):'');
+    const tekst=kattuvad.slice(0,6).map(x=>x.nimi+': '+x.p[0].n+' ja '+x.p[1].n).join('\n')+(kattuvad.length>6?'\n… ja veel '+(kattuvad.length-6):'');
     sulgePrindiSkeem();
     const v=await kysi('Tähised kattuvad', tekst+'\n\nKas lähed neid parandama või prindin ikkagi?', [
       {tekst:'✎ Lähen parandama', klass:'peamine', vaartus:'p'},
@@ -3542,9 +3710,9 @@ async function koostaPrindiSkeem(){
       {tekst:'Loobu', klass:'tavaline', vaartus:null}]);
     if(v===null){ k.disabled=false; return; }
     if(v==='p'){
-      const x=kattuvad[0], o=x.L.leht.osad.find(o=>o.t===x.p[0].t)||x.L.leht.osad[0];
-      skeemiTyyp=o.t; skeemiValitud=x.p[0].k; filtriVarv=null; avaPlaan(); naitaLehte(o.m,o.i);
-      teade('Kattuvad '+x.p[0].k+' ja '+x.p[1].k+' – vajuta ✎ Muuda ja lohista');
+      const x=kattuvad[0], o=x.L.leht.osad.find(o=>o.t===x.p[0].t||o.t===x.p[1].t)||x.L.leht.osad[0];
+      skeemiTyyp=o.t; skeemiValitud=x.p[0].n; filtriVarv=null; avaPlaan(); naitaLehte(o.m,o.i);
+      teade('Kattuvad '+x.p[0].n+' ja '+x.p[1].n+' – vajuta ✎ Muuda ja lohista');
       k.disabled=false; return;
     }
   }
@@ -3552,6 +3720,8 @@ async function koostaPrindiSkeem(){
   const info=majaInfo(maja), majaNimi=(document.querySelector('#maja option:checked')||{}).textContent||maja;
   const pealkiri=[info.firma||majaNimi, info.aadress].filter(Boolean).join(' – ');
   const ikoonid={}; PR_LIIGID.forEach(([t])=>ikoonid[t]=liigiIkoon(t));
+  ikoonid.y_hn=IK_HN;
+  for(const L of lehed) for(const e of L.margid) if(e.yhine==='nool' && !ikoonid[e.t]) ikoonid[e.t]=await noolePng(+e.t.slice(7));
   const TUME=[31,56,100], SIN=[68,114,196], PUN=[198,40,40];
   lehed.forEach((L,n)=>{
     if(n>0) doc.addPage(pr.paber.toLowerCase(), L.lm.or);
@@ -3595,8 +3765,11 @@ async function koostaPrindiSkeem(){
     [['punane','puudus või tähtaeg möödas'],['roheline','korras']].forEach(([v,t])=>{ const c=PR_VARVID[v];
       doc.setFillColor(...c.bg); doc.setDrawColor(...c.ar); doc.setLineWidth(0.35); doc.roundedRect(x,y-1.8,6,3.6,0.6,0.6,'FD');
       doc.setTextColor(40,40,40); doc.text(t, x+7.5, y, {baseline:'middle'}); x+=7.5+doc.getTextWidth(t)+7; });
-    liigid.forEach(t=>{ try{ doc.addImage(ikoonid[t],'PNG',x,y-2.5,5,5,'ik_'+t,'FAST'); }catch(er){}
-      doc.setTextColor(40,40,40); doc.text(PR_LEGEND[t], x+6.5, y, {baseline:'middle'}); x+=6.5+doc.getTextWidth(PR_LEGEND[t])+7; });
+    const leg=liigid.map(t=>[t,PR_LEGEND[t]]);
+    if(L.margid.some(e=>e.yhine==='hn')) leg.push(['y_hn','häirenupp']);
+    if(L.margid.some(e=>e.yhine==='nool')){ const t0=L.margid.find(e=>e.yhine==='nool').t; leg.push([t0,'evakuatsiooni suund']); }
+    leg.forEach(([t,nimi])=>{ try{ doc.addImage(ikoonid[t],'PNG',x,y-2.5,5,5,'ik_'+t,'FAST'); }catch(er){}
+      doc.setTextColor(40,40,40); doc.text(nimi, x+6.5, y, {baseline:'middle'}); x+=6.5+doc.getTextWidth(nimi)+7; });
     doc.setFontSize(8*fk); doc.setTextColor(110,110,110);
     doc.text('Rovalis · lk '+(n+1)+' / '+lehed.length, W-ML, y, {align:'right', baseline:'middle'});
   });
