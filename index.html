@@ -392,6 +392,8 @@
   #fotoKate{position:fixed; inset:0; background:rgba(0,0,0,.92); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:60; gap:10px;}
   #fotoKate img{max-width:96vw; max-height:86vh; border-radius:6px;}
   #fotoKate span{color:#ccc; font-size:.9rem;}
+  .fotoMark{display:inline-flex; align-items:center; gap:3px; color:var(--sinine); font-weight:700; font-size:.85rem; border:1.5px solid #c9d5ea; border-radius:8px; padding:5px 7px; margin-right:6px; background:#fff; flex-shrink:0; cursor:pointer;}
+  .fotoMark svg{width:19px; height:19px; display:block;}
   .vorm input.automaatne{border-color:#1da747; background:#effaf2;}
   .autoMarge{display:none; font-size:.85rem; color:#178a3b; font-weight:600; margin:2px 0 0 4px;}
   .markusNupud{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
@@ -455,7 +457,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AF</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AG</div>
   </div>
 </div>
 
@@ -609,7 +611,7 @@
   <div class="liug">Paber (prindiks) <select id="ppPaber"><option value="A4">A4</option><option value="A3">A3</option><option value="A1">A1</option></select><span class="vaikeT">kiri prindil vähemalt 3 mm</span></div>
 </div>
 <input type="file" id="fotoSisend" accept="image/*" capture="environment" style="display:none">
-<div id="fotoKate" onclick="this.style.display='none'"><img alt="foto"><span>Puuduta sulgemiseks</span></div>
+<div id="fotoKate" onclick="fotoKateKlikk()"><img alt="foto"><span>Puuduta sulgemiseks</span></div>
 
 <div id="kinnitusKate">
   <div class="kinnitus">
@@ -789,8 +791,11 @@ function avaKustutid(tyyp){
     const d=document.createElement('div');
     d.className='rida-seade'+(s.kustutatud?' kustutatud':'');
     const lisainfo=s.vaatlus?('viimane vaatlus: '+s.vaatlus):'vaatlus tegemata';
-    d.innerHTML='<span class="tulukas '+kvSeis(s,aktiivneTyyp)+'"></span><span class="kood">'+s.kood+'</span><span class="asukoht">'+(s.kustutatud?'Kustutatud '+kpEst(s.kustutatud):esc(olekKirjeldus(s))+'<br>'+lisainfo)+'</span><span style="color:#9ab">›</span>';
+    d.innerHTML='<span class="tulukas '+kvSeis(s,aktiivneTyyp)+'"></span><span class="kood">'+s.kood+'</span><span class="asukoht">'+(s.kustutatud?'Kustutatud '+kpEst(s.kustutatud):esc(olekKirjeldus(s))+'<br>'+lisainfo)+'</span>'
+      +(s.fotod&&s.fotod.length?'<span class="fotoMark" title="Näita fotot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'+(s.fotod.length>1?s.fotod.length:'')+'</span>':'')
+      +'<span style="color:#9ab">›</span>';
     d.onclick=()=>avaVorm(s.kood);
+    const fm=d.querySelector('.fotoMark'); if(fm) fm.onclick=ev=>{ ev.stopPropagation(); naitaFotodSuurelt(s.fotod,0); };
     n.appendChild(d);
   });
   if(!list.length) n.innerHTML='<p style="text-align:center;color:#567;margin-top:30px;">Nimekiri on tühi – kasuta Importi.</p>';
@@ -3151,8 +3156,19 @@ function eemaldaFoto(id){
   else vormFotodEemaldatud.push(id);
   joonistaFotod();
 }
-function naitaFotoSuurelt(id){
-  fotoLoe(id).then(p=>{ if(!p) return; const k=document.getElementById('fotoKate'); k.querySelector('img').src=p; k.style.display='flex'; });
+function naitaFotoSuurelt(id){ naitaFotodSuurelt([id],0); }
+/* mitu fotot: puudutus näitab järgmist, viimase järel sulgub */
+let fotoJada=[], fotoJadaI=0;
+function naitaFotodSuurelt(ids,i){
+  fotoJada=(ids||[]).slice(); fotoJadaI=i||0;
+  fotoLoe(fotoJada[fotoJadaI]).then(p=>{ if(!p){ teade('Fotot ei leitud selles telefonis'); return; }
+    const k=document.getElementById('fotoKate'); k.querySelector('img').src=p;
+    k.querySelector('span').textContent=fotoJada.length>1?(fotoJadaI+1)+' / '+fotoJada.length+(fotoJadaI<fotoJada.length-1?' · puuduta järgmise jaoks':' · puuduta sulgemiseks'):'Puuduta sulgemiseks';
+    k.style.display='flex'; });
+}
+function fotoKateKlikk(){
+  if(fotoJadaI<fotoJada.length-1){ naitaFotodSuurelt(fotoJada,fotoJadaI+1); return; }
+  document.getElementById('fotoKate').style.display='none';
 }
 async function joonistaFotod(){
   const r=document.getElementById('fotoRida');
