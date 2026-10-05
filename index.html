@@ -314,6 +314,7 @@
   #plaanVaade.menyyAuto.menyyPeidus #plaanPaneel{max-height:0;}
   #plaanVaade header .menyyNupp{display:none; border:none; background:rgba(255,255,255,.2); color:#fff; border-radius:8px; padding:2px 12px 4px; min-width:46px; min-height:40px; font-weight:800; font-size:1.5rem; line-height:1; cursor:pointer; flex-shrink:0; margin-left:auto;}
   #plaanVaade.menyyAuto header .menyyNupp{display:block;}
+  #plaanVaade header .menyyNupp.lahti{background:#fff; color:var(--tume);}
   #plaanVaade.lisa.ppKoos #plaanPilt{padding-bottom:64px;}
   #paigPaneel .kokku{white-space:nowrap; background:#e6eef8; color:var(--tume); border:none; border-radius:10px; padding:8px 12px; font-weight:800; font-size:.9rem; cursor:pointer; margin-left:auto;}
   #paigPaneel.koos .chips, #paigPaneel.koos .vihje, #paigPaneel.koos .liug, #paigPaneel.koos .ppSelgitus{display:none;}
@@ -448,7 +449,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AC</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AD</div>
   </div>
 </div>
 
@@ -1590,9 +1591,9 @@ function uuendaTooriistad(){
 }
 
 let menyyTaimer=null, menyyKinni=false;
-/* ☰ kui menüü on peidus, ✕ kui menüü on lahti */
+/* ☰ alati; kui menüü on lahti, on nupp heledam (vajutatud) */
 (function(){ const pv=document.getElementById('plaanVaade'), b=document.getElementById('nupMenyy');
-  if(pv&&b&&window.MutationObserver) new MutationObserver(()=>{ const t=pv.classList.contains('menyyPeidus')?'☰':'✕'; if(b.textContent!==t) b.textContent=t; }).observe(pv,{attributes:true, attributeFilter:['class']}); })();
+  if(pv&&b&&window.MutationObserver) new MutationObserver(()=>{ b.classList.toggle('lahti', !pv.classList.contains('menyyPeidus')); }).observe(pv,{attributes:true, attributeFilter:['class']}); })();
 const MENYY_AEG=2000;   /* nii kaua on menüü avamisel näha, siis libiseb üles */
 function menyyPaigutus(){ setTimeout(()=>{ kinnitaFabid(); try{paigutaKiht();}catch(e){} },650); }
 function menyyAutoAlusta(){
