@@ -449,7 +449,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AD</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AE</div>
   </div>
 </div>
 
@@ -1491,7 +1491,7 @@ function kinnitaFabid(){
   const jrk=['fabSalvesta','fabPuhasta','fabKustukumm','fabPliiats','fabLisa','nupTagasiVota'];   /* alt üles */
   const pp=document.getElementById('paigPaneel');
   const samm=kylili?45:58, alg=(kylili?8:16)+((!kylili&&pp&&pp.style.display==='block')?pp.offsetHeight:0);
-  const fabid=[['fabJoonista',kylili?10:16,kylili?'p':'v']].concat(jrk.map((id,i)=>[id,alg+i*samm,kylili?'v2':'v']));
+  const fabid=[['fabJoonista',kylili?8:16,'v']].concat(jrk.map((id,i)=>[id,alg+i*samm,kylili?'v2':'v']));
   /* Puhasta: püsti teistest eraldi kõige üleval; külili paremas külgribas (#paneelPuhasta) */
   fabid.forEach(([id,alt,serv])=>{
     const el=document.getElementById(id);
