@@ -491,7 +491,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AL</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AM</div>
   </div>
 </div>
 
@@ -4020,7 +4020,7 @@ function sulgeSkann(){
 /* PWA: võrguta töö + palu brauserilt, et andmeid ei kustutataks */
 if('serviceWorker' in navigator && location.protocol!=='file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW:',e));
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{ try{ reg.update(); }catch(e){} document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') try{ reg.update(); }catch(e){} }); }).catch(e=>console.warn('SW:',e));
   });
 }
 if(navigator.storage && navigator.storage.persist){

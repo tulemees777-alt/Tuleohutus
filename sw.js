@@ -1,6 +1,6 @@
 /* Rovalis – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'rovalis-2026-10-05al';
+const VERSIOON = 'rovalis-2026-10-05am';
 const FAILID = [
   './',
   './index.html',
@@ -44,7 +44,8 @@ self.addEventListener('fetch', e => {
   /* Äpi leht: proovi võrgust (et uuendused jõuaksid kohe kohale), ilma netita vahemälust */
   if (req.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
     /* nõrga levi korral ei oota üle 4 s – siis avatakse salvestatud versioon */
-    const vorgust = fetch(req).then(r => {
+    /* cache:'no-cache' – ei kasuta GitHubi 10 min vahemälu, uus versioon tuleb kohe */
+    const vorgust = fetch(url.origin + url.pathname, { cache: 'no-cache', credentials: 'same-origin' }).then(r => {
       if (r.ok) { const k = r.clone(); caches.open(VERSIOON).then(c => c.put('./index.html', k)); }
       return r;
     });
