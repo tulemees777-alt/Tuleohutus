@@ -457,7 +457,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AG</div>
+    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AH</div>
   </div>
 </div>
 
@@ -3189,6 +3189,25 @@ function sailitaFotod(vana, uus){
   (uus||[]).forEach(s=>{ if(m.has(s.kood)) s.fotod=m.get(s.kood); });
 }
 
+/* PDF valmis: salvestab Allalaadimistesse ja pakub „Ava PDF“ / „Jaga“ / „Sulge“ */
+async function pdfValmis(doc, nimi, pealkiri, lisa){
+  let blob=null; try{ blob=doc.output('blob'); }catch(e){}
+  doc.save(nimi);
+  if(!blob){ teade(nimi+' – vaata Allalaadimised'); return; }
+  let fail=null, saabJagada=false;
+  try{ fail=new File([blob], nimi, {type:'application/pdf'}); saabJagada=!!(navigator.share&&navigator.canShare&&navigator.canShare({files:[fail]})); }catch(e){}
+  const nupud=[{tekst:'📄 Ava PDF', klass:'peamine', vaartus:'ava'}];
+  if(saabJagada) nupud.push({tekst:'↗ Jaga (e-post, WhatsApp, Teams…)', klass:'roheline', vaartus:'jaga'});
+  nupud.push({tekst:'Sulge', klass:'tavaline', vaartus:null});
+  const v=await kysi(pealkiri, nimi+'\nsalvestatud kausta Allalaadimised'+(lisa?'\n\n'+lisa:''), nupud);
+  if(v==='ava'){
+    const u=URL.createObjectURL(blob);
+    const w=window.open(u,'_blank'); if(!w) location.href=u;
+    setTimeout(()=>URL.revokeObjectURL(u), 120000);
+  }else if(v==='jaga'){
+    try{ await navigator.share({files:[fail], title:nimi}); }catch(e){ if(e&&e.name!=='AbortError') teade('Jagamine ebaõnnestus – fail on kaustas Allalaadimised'); }
+  }
+}
 /* ---- PDF-ARUANNE OTSE FAILINA (jsPDF + autotable, laaditakse vajadusel) ---- */
 async function looAruanne(){
   const m=valitudMaja();
@@ -3288,8 +3307,7 @@ async function looAruanne(){
   for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); doc.setTextColor(110,110,110); doc.setFont('helvetica','normal');
     doc.text(L.pealkiri+' · '+(info.firma||m), ML, 290); doc.text('Lk '+i+' / '+n, W-MR, 290, {align:'right'}); }
   const nimi='Aruanne '+m+' '+L.nimi+' '+tanane()+'.pdf';
-  doc.save(nimi);
-  teade('Aruanne salvestatud: '+nimi+' – vaata Allalaadimised');
+  pdfValmis(doc, nimi, '✓ Aruanne on valmis');
 }
 
 /* ======================================================================
@@ -3584,9 +3602,8 @@ async function koostaPrindiSkeem(){
   });
   const lyh=PR_LIIGID.map(x=>x[0]).filter(t=>pr.liigid.has(t)).map(t=>LIIGI_EESLIIDE[t]).join(', ');
   const nimi='Skeem '+maja+' '+lyh+' '+tanane()+'.pdf';
-  doc.save(nimi);
   sulgePrindiSkeem();
-  teade('Skeem salvestatud: '+nimi+(plaan.eraldi.length?' (osa liike eraldi lehel – joonis ei klapi)':'')+' – vaata Allalaadimised');
+  pdfValmis(doc, nimi, '✓ Skeem on valmis', plaan.eraldi.length?'Osa liike on eraldi lehel – joonis ei klapi.':'');
   }catch(err){ console.error(err); teade('Skeemi koostamine ebaõnnestus: '+err.message); }
   k.disabled=false;
 }
