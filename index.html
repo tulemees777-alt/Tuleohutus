@@ -493,7 +493,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 06.10.2026-AO</div>
+    <div class="jalus">Rovalis OÜ · versioon 07.10.2026-AP</div>
   </div>
 </div>
 
@@ -1380,7 +1380,7 @@ function joonistaSildid(){
     kiht.appendChild(d);
   }
   joonistaYhised(kiht, maja, m);
-  if(teisedNahtav) joonistaTeised(kiht, maja, m, S, j);
+  if(teisedNahtav || (paigutus.aktiivne && kaardiFilter!=='koik')) joonistaTeised(kiht, maja, m, S, j);   /* ühe liigi lehel muutmise ajal: teised liigid tuhmilt */
   if(filtriVarv) kiht.dataset.filter=filtriVarv; else delete kiht.dataset.filter;
   kiht.style.setProperty('--s', Math.max(1,S.suurus||1));
   kiht.style.setProperty('--f', margiCqw(S,j).toFixed(4));
