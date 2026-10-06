@@ -338,6 +338,8 @@
   #plaanKiht[data-filter=punane] .ikoon:not(.punane), #plaanKiht[data-filter=roheline] .ikoon:not(.roheline){display:none;}
   #plaanKiht .ots{position:absolute; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%; border:2px dashed #1c63b7; background:rgba(28,99,183,.12); box-sizing:border-box; display:none; z-index:0; touch-action:none;}
   #plaanVaade.paigutus #plaanKiht .ots.aktiiv{display:block; pointer-events:auto; cursor:grab;}
+  #plaanKiht .yots{position:absolute; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%; border:2px dashed #1c63b7; background:rgba(28,99,183,.12); box-sizing:border-box; display:none; z-index:1; touch-action:none;}
+  #plaanVaade.paigutus #plaanKiht .yots.aktiiv{display:block; pointer-events:auto; cursor:grab;}
   #plaanKiht[data-filter=punane] .ots:not(.punane), #plaanKiht[data-filter=roheline] .ots:not(.roheline){display:none!important;}
   #plaanKiht svg.nooled{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none;}
   #plaanKiht .silt.oma{transform:translate(-50%,-50%); display:flex; align-items:center; padding:.18em .4em; border-radius:.3em; border-width:2px; font-weight:800; white-space:nowrap; line-height:1; font-size:calc(var(--s,1) * var(--f,.81) * 1cqw); border-width:max(1px,.13em)!important; background:#fff; z-index:1;}
@@ -491,7 +493,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 06.10.2026-AN</div>
+    <div class="jalus">Rovalis OÜ · versioon 06.10.2026-AO</div>
   </div>
 </div>
 
@@ -1496,7 +1498,11 @@ function joonistaYhised(kiht, maja, m){
     const d=document.createElement('div'); d.className='ymark'+(paigutus.aktiivne&&paigutus.ymark===y.id?' aktiiv valitudY':''); d.dataset.yid=y.id;
     d.style.left=(y.x*100)+'%'; d.style.top=(y.y*100)+'%';
     d.innerHTML='<img alt="" src="'+(y.t==='hn'?IK_HN:nooleSvgUrl(y.s))+'">';
-    if(y.ox!=null){ d.dataset.ox=y.ox*100; d.dataset.oy=y.oy*100; }   /* „Liiguta noolega“: nool nupu tegelikku kohta */
+    if(y.ox!=null){
+      d.dataset.ox=y.ox*100; d.dataset.oy=y.oy*100;   /* „Liiguta noolega“: nool nupu tegelikku kohta */
+      const o=document.createElement('div'); o.className='yots'+(paigutus.aktiivne&&paigutus.ymark===y.id?' aktiiv':''); o.dataset.yid=y.id;
+      o.style.left=(y.ox*100)+'%'; o.style.top=(y.oy*100)+'%'; kiht.appendChild(o);
+    }
     kiht.appendChild(d);
   });
 }
@@ -1552,11 +1558,9 @@ async function yhineMenyy(id){
   const L=leiaYhineAndmed(id); if(!L) return;
   if(L.y.t==='hn'){
     const nupud=[{tekst:'↗ Liiguta noolega', klass:'tavaline', vaartus:'n'}];
-    if(L.y.ox!=null) nupud.push({tekst:'⟲ Tagasi nupu kohale (nool ära)', klass:'tavaline', vaartus:'t'});
     const v=await kysi('ATS häirenupp', 'Lohistades liigub. See märk on kõigil selle korruse skeemidel.', nupud.concat([{tekst:'🗑 Kustuta häirenupp', klass:'ohtlik', vaartus:'k'},{tekst:'Tühista', klass:'peamine', vaartus:null}]));
     if(v==='k') kustutaYhine(id);
-    if(v==='n'){ paigutus.yNool=id; paigutus.mark=null; paigutus.liiguta=null; teade('Puuduta kohta, kuhu ATS märk tõsta – nool jääb nupu kohale'); }
-    if(v==='t'){ ajaluguLisa(); L.y.x=L.y.ox; L.y.y=L.y.oy; delete L.y.ox; delete L.y.oy; salvestaYhised(); joonistaSildid(); }
+    if(v==='n'){ paigutus.yNoolLohe=id; paigutus.ymark=id; paigutus.mark=null; paigutus.liiguta=null; joonistaSildid(); teade('Tõmba märki näpuga – nool jääb ATS nupu kohale'); }
     return;
   }
   const v=await kysiSuund(L.y.s||0);
@@ -1584,10 +1588,14 @@ function kysiSuund(praegu){
 (function(){
   const kiht=document.getElementById('plaanKiht'); let l=null;
   kiht.addEventListener('pointerdown',e=>{
-    if(!paigutus.aktiivne) return; const d=e.target.closest('.ymark'); if(!d) return;
+    if(!paigutus.aktiivne) return; const d=e.target.closest('.ymark, .yots'); if(!d) return;
     e.preventDefault(); e.stopPropagation();
     const kr=kiht.getBoundingClientRect(), r=d.getBoundingClientRect();
-    l={d, id:d.dataset.yid, x:e.clientX, y:e.clientY, liikus:false, s0:[(r.left+r.width/2-kr.left)/kr.width*100,(r.top+r.height/2-kr.top)/kr.height*100]};
+    l={d, id:d.dataset.yid, x:e.clientX, y:e.clientY, liikus:false, ots:d.classList.contains('yots'), s0:[(r.left+r.width/2-kr.left)/kr.width*100,(r.top+r.height/2-kr.top)/kr.height*100]};
+    l.m=l.ots?[...kiht.querySelectorAll('.ymark')].find(x=>x.dataset.yid===l.id):d;
+    /* nagu kustutil: „Liiguta noolega“ → nool algab vanast kohast */
+    if(!l.ots && paigutus.yNoolLohe===l.id && d.dataset.ox===undefined){ d.dataset.ox=l.s0[0]; d.dataset.oy=l.s0[1]; }
+    l.nool=!l.ots && d.dataset.ox!==undefined;
     try{ d.setPointerCapture(e.pointerId); }catch(er){}
   });
   kiht.addEventListener('pointermove',e=>{
@@ -1595,11 +1603,26 @@ function kysiSuund(praegu){
     l.liikus=true; const kr=kiht.getBoundingClientRect();
     l.px=Math.max(0,Math.min(100,l.s0[0]+(e.clientX-l.x)/kr.width*100)); l.py=Math.max(0,Math.min(100,l.s0[1]+(e.clientY-l.y)/kr.height*100));
     l.d.style.left=l.px+'%'; l.d.style.top=l.py+'%';
+    if(l.ots && l.m){ l.m.dataset.ox=l.px; l.m.dataset.oy=l.py; }
+    joonistaNooled();
   });
   const lopp=e=>{
     if(!l) return; const x=l; l=null;
-    if(x.liikus){ const L=leiaYhineAndmed(x.id); if(L){ ajaluguLisa(); L.y.x=+(x.px/100).toFixed(5); L.y.y=+(x.py/100).toFixed(5); salvestaYhised(); } joonistaSildid(); }
-    else if(e.type==='pointerup') yhineMenyy(x.id);
+    if(x.liikus){ const L=leiaYhineAndmed(x.id); if(L){ ajaluguLisa();
+        const px=+(x.px/100).toFixed(5), py=+(x.py/100).toFixed(5);
+        if(x.ots){ L.y.ox=px; L.y.oy=py; }
+        else if(x.nool){
+          /* eemal olev märk: noole ots jääb paigale; tagasi otsa peale → nool kaob */
+          const ox=parseFloat(x.d.dataset.ox)/100, oy=parseFloat(x.d.dataset.oy)/100;
+          const kr=kiht.getBoundingClientRect(), ir=x.d.getBoundingClientRect();
+          if(Math.hypot(ir.left+ir.width/2-(kr.left+ox*kr.width), ir.top+ir.height/2-(kr.top+oy*kr.height))<ir.width*0.8){ L.y.x=+ox.toFixed(5); L.y.y=+oy.toFixed(5); delete L.y.ox; delete L.y.oy; }
+          else { L.y.x=px; L.y.y=py; L.y.ox=+ox.toFixed(5); L.y.oy=+oy.toFixed(5); }
+        }
+        else { L.y.x=px; L.y.y=py; }
+        salvestaYhised(); }
+      if(paigutus.yNoolLohe===x.id) paigutus.yNoolLohe=null;
+      paigutus.ymark=x.id; joonistaSildid(); }
+    else if(e.type==='pointerup' && !x.ots) yhineMenyy(x.id);
   };
   kiht.addEventListener('pointerup',lopp); kiht.addEventListener('pointercancel',lopp);
 })();
@@ -1685,18 +1708,6 @@ function leiaPuudutatud(e){
 }
 /* Muuda-režiimis: 1. puudutus valib märgi/tähise (sinine ring), siis saab seda lohistada; Lisa-tööriistaga tühi koht → uus seade */
 function muudaPuudutus(e){
-  if(paigutus.yNool){
-    const id=paigutus.yNool; paigutus.yNool=null;
-    const L=leiaYhineAndmed(id), S=seadmeSkeem();
-    if(!L||!S||leiaYhine(e)===id){ teade('Tühistatud'); return; }
-    const pt=plaaniPunkt(e), K=lehtKorgus(S,pt.j);
-    if(pt.x<0||pt.y<0||pt.x>S.laius||pt.y>K) return;
-    ajaluguLisa();
-    if(L.y.ox==null){ L.y.ox=L.y.x; L.y.oy=L.y.y; }
-    L.y.x=+(pt.x/S.laius).toFixed(5); L.y.y=+(pt.y/K).toFixed(5);
-    salvestaYhised(); paigutus.ymark=id; joonistaSildid(); teade('ATS märk tõstetud – nool näitab nupu kohta');
-    return;
-  }
   const yh=leiaYhine(e);
   if(yh){ if(yh!==paigutus.ymark){ paigutus.ymark=yh; paigutus.mark=null; paigutus.liiguta=null; joonistaSildid(); } else yhineMenyy(yh); return; }
   if(tooriist==='hn'||tooriist==='nool'){ lisaYhine(e, tooriist); return; }
@@ -1879,7 +1890,7 @@ function valiTooriist(t){
   tooriist=(tooriist===t)?null:t;
   kustukumm=(tooriist==='kumm');
   if(paigutus.aktiivne){
-    if(tooriist==='pliiats'||tooriist==='kumm'||tooriist==='hn'||tooriist==='nool'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.yNool=null; paigutus.ymark=null; }
+    if(tooriist==='pliiats'||tooriist==='kumm'||tooriist==='hn'||tooriist==='nool'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.yNoolLohe=null; paigutus.ymark=null; }
     lisaReziim(tooriist==='lisa');
     joonistaSildid();
   }
@@ -3118,7 +3129,7 @@ function lisaReziim(on){
 }
 function lopetaPaigutus(){
   if(!paigutus.aktiivne) return;
-  paigutus.aktiivne=false; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.yNool=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null; paigutus.uus=false;
+  paigutus.aktiivne=false; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.yNoolLohe=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null; paigutus.uus=false;
   document.getElementById('plaanVaade').classList.remove('paigutus','lisa');
   document.getElementById('paigPaneel').style.display='none';
   salvestaSkeem(pk());
@@ -3358,7 +3369,7 @@ async function votaTagasi(){
     if(andmed[x.m]) andmed[x.m][t]=JSON.parse(kk.list); }
   salvestaAndmed(); const S0=seadmeSkeem(); if(S0) naitaSuurus(S0);
   if(x.yh!==undefined){ YHISED[x.ym]=JSON.parse(x.yh); salvestaYhised(); }
-  paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.ymark=null; paigutus.yNool=null;
+  paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.ymark=null; paigutus.yNoolLohe=null;
   renderPaigutus(); joonistaSildid(); teade('Tagasi võetud');
 }
 /* märkide suurus: 3 kindlat valikut, kehtib kogu skeemile */
