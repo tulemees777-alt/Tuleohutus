@@ -491,7 +491,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 05.10.2026-AM</div>
+    <div class="jalus">Rovalis OÜ · versioon 06.10.2026-AN</div>
   </div>
 </div>
 
@@ -1496,6 +1496,7 @@ function joonistaYhised(kiht, maja, m){
     const d=document.createElement('div'); d.className='ymark'+(paigutus.aktiivne&&paigutus.ymark===y.id?' aktiiv valitudY':''); d.dataset.yid=y.id;
     d.style.left=(y.x*100)+'%'; d.style.top=(y.y*100)+'%';
     d.innerHTML='<img alt="" src="'+(y.t==='hn'?IK_HN:nooleSvgUrl(y.s))+'">';
+    if(y.ox!=null){ d.dataset.ox=y.ox*100; d.dataset.oy=y.oy*100; }   /* „Liiguta noolega“: nool nupu tegelikku kohta */
     kiht.appendChild(d);
   });
 }
@@ -1550,8 +1551,12 @@ let viimaneSuund=0;
 async function yhineMenyy(id){
   const L=leiaYhineAndmed(id); if(!L) return;
   if(L.y.t==='hn'){
-    const v=await kysi('Häirenupp', 'Lohistades liigub. See märk on kõigil selle korruse skeemidel.', [{tekst:'🗑 Kustuta häirenupp', klass:'ohtlik', vaartus:'k'},{tekst:'Tühista', klass:'peamine', vaartus:null}]);
+    const nupud=[{tekst:'↗ Liiguta noolega', klass:'tavaline', vaartus:'n'}];
+    if(L.y.ox!=null) nupud.push({tekst:'⟲ Tagasi nupu kohale (nool ära)', klass:'tavaline', vaartus:'t'});
+    const v=await kysi('ATS häirenupp', 'Lohistades liigub. See märk on kõigil selle korruse skeemidel.', nupud.concat([{tekst:'🗑 Kustuta häirenupp', klass:'ohtlik', vaartus:'k'},{tekst:'Tühista', klass:'peamine', vaartus:null}]));
     if(v==='k') kustutaYhine(id);
+    if(v==='n'){ paigutus.yNool=id; paigutus.mark=null; paigutus.liiguta=null; teade('Puuduta kohta, kuhu ATS märk tõsta – nool jääb nupu kohale'); }
+    if(v==='t'){ ajaluguLisa(); L.y.x=L.y.ox; L.y.y=L.y.oy; delete L.y.ox; delete L.y.oy; salvestaYhised(); joonistaSildid(); }
     return;
   }
   const v=await kysiSuund(L.y.s||0);
@@ -1680,6 +1685,18 @@ function leiaPuudutatud(e){
 }
 /* Muuda-režiimis: 1. puudutus valib märgi/tähise (sinine ring), siis saab seda lohistada; Lisa-tööriistaga tühi koht → uus seade */
 function muudaPuudutus(e){
+  if(paigutus.yNool){
+    const id=paigutus.yNool; paigutus.yNool=null;
+    const L=leiaYhineAndmed(id), S=seadmeSkeem();
+    if(!L||!S||leiaYhine(e)===id){ teade('Tühistatud'); return; }
+    const pt=plaaniPunkt(e), K=lehtKorgus(S,pt.j);
+    if(pt.x<0||pt.y<0||pt.x>S.laius||pt.y>K) return;
+    ajaluguLisa();
+    if(L.y.ox==null){ L.y.ox=L.y.x; L.y.oy=L.y.y; }
+    L.y.x=+(pt.x/S.laius).toFixed(5); L.y.y=+(pt.y/K).toFixed(5);
+    salvestaYhised(); paigutus.ymark=id; joonistaSildid(); teade('ATS märk tõstetud – nool näitab nupu kohta');
+    return;
+  }
   const yh=leiaYhine(e);
   if(yh){ if(yh!==paigutus.ymark){ paigutus.ymark=yh; paigutus.mark=null; paigutus.liiguta=null; joonistaSildid(); } else yhineMenyy(yh); return; }
   if(tooriist==='hn'||tooriist==='nool'){ lisaYhine(e, tooriist); return; }
@@ -1862,7 +1879,7 @@ function valiTooriist(t){
   tooriist=(tooriist===t)?null:t;
   kustukumm=(tooriist==='kumm');
   if(paigutus.aktiivne){
-    if(tooriist==='pliiats'||tooriist==='kumm'||tooriist==='hn'||tooriist==='nool'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.ymark=null; }
+    if(tooriist==='pliiats'||tooriist==='kumm'||tooriist==='hn'||tooriist==='nool'){ paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.yNool=null; paigutus.ymark=null; }
     lisaReziim(tooriist==='lisa');
     joonistaSildid();
   }
@@ -3008,7 +3025,8 @@ function joonistaNooled(){
   const kiht=document.getElementById('plaanKiht');
   let svg=kiht.querySelector('svg.nooled');
   const oma=[...kiht.querySelectorAll('.silt.oma')];
-  if(!oma.length){ if(svg) svg.remove(); return; }
+  const yNooled=[...kiht.querySelectorAll('.ymark[data-ox]')];
+  if(!oma.length && !yNooled.length){ if(svg) svg.remove(); return; }
   if(!svg){ svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('class','nooled'); kiht.insertBefore(svg,kiht.firstChild); }
   const kr=kiht.getBoundingClientRect(), W=kr.width, H=kr.height;
   if(!W||!H) return;
@@ -3022,6 +3040,16 @@ function joonistaNooled(){
     const ux=dx/len, uy=dy/len, t=(r.width/2+1)/Math.max(Math.abs(ux),Math.abs(uy));
     const sx=cx+ux*t, sy=cy+uy*t, L=Math.max(3,r.width*0.35), B=L*0.45, lw=Math.max(0.8,r.width*0.07).toFixed(2);
     const varv=ie.classList.contains('punane')?NOOLE_VARV.punane:ie.classList.contains('roheline')?NOOLE_VARV.roheline:'#d22b2b';
+    const bx=tx-ux*L, by=ty-uy*L;
+    svg.insertAdjacentHTML('beforeend','<line x1="'+sx+'" y1="'+sy+'" x2="'+bx+'" y2="'+by+'" stroke="'+varv+'" stroke-width="'+lw+'" stroke-linecap="round"/>'
+      +'<polygon points="'+tx+','+ty+' '+(bx-uy*B)+','+(by+ux*B)+' '+(bx+uy*B)+','+(by-ux*B)+'" fill="'+varv+'"/>');
+  });
+  yNooled.forEach(ie=>{
+    const r=ie.getBoundingClientRect(), cx=r.left-kr.left+r.width/2, cy=r.top-kr.top+r.height/2;
+    const tx=parseFloat(ie.dataset.ox)/100*W, ty=parseFloat(ie.dataset.oy)/100*H;
+    const dx=tx-cx, dy=ty-cy, len=Math.hypot(dx,dy); if(len<r.width*0.6) return;
+    const ux=dx/len, uy=dy/len, t=(r.width/2+1)/Math.max(Math.abs(ux),Math.abs(uy));
+    const sx=cx+ux*t, sy=cy+uy*t, L=Math.max(3,r.width*0.35), B=L*0.45, lw=Math.max(0.8,r.width*0.07).toFixed(2), varv=NOOLE_VARV.punane;
     const bx=tx-ux*L, by=ty-uy*L;
     svg.insertAdjacentHTML('beforeend','<line x1="'+sx+'" y1="'+sy+'" x2="'+bx+'" y2="'+by+'" stroke="'+varv+'" stroke-width="'+lw+'" stroke-linecap="round"/>'
       +'<polygon points="'+tx+','+ty+' '+(bx-uy*B)+','+(by+ux*B)+' '+(bx+uy*B)+','+(by-ux*B)+'" fill="'+varv+'"/>');
@@ -3090,7 +3118,7 @@ function lisaReziim(on){
 }
 function lopetaPaigutus(){
   if(!paigutus.aktiivne) return;
-  paigutus.aktiivne=false; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null; paigutus.uus=false;
+  paigutus.aktiivne=false; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.noolLohe=null; paigutus.yNool=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null; paigutus.uus=false;
   document.getElementById('plaanVaade').classList.remove('paigutus','lisa');
   document.getElementById('paigPaneel').style.display='none';
   salvestaSkeem(pk());
@@ -3330,7 +3358,7 @@ async function votaTagasi(){
     if(andmed[x.m]) andmed[x.m][t]=JSON.parse(kk.list); }
   salvestaAndmed(); const S0=seadmeSkeem(); if(S0) naitaSuurus(S0);
   if(x.yh!==undefined){ YHISED[x.ym]=JSON.parse(x.yh); salvestaYhised(); }
-  paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.ymark=null;
+  paigutus.mark=null; paigutus.liiguta=null; paigutus.liigutaNool=null; paigutus.ymark=null; paigutus.yNool=null;
   renderPaigutus(); joonistaSildid(); teade('Tagasi võetud');
 }
 /* märkide suurus: 3 kindlat valikut, kehtib kogu skeemile */
@@ -3761,8 +3789,10 @@ function prGeomeetria(doc, maja, leht, ala){
     }
   });
   korruseYhised(maja, leht.nimi).forEach(y=>{
-    tulem.push({kood:y.t==='hn'?'Häirenupp':'Evak. nool', uid:y.id, t:y.t==='hn'?'y_hn':'y_nool_'+(y.s||0), v:'roheline', F:7/2.2,
-      ikoon:{x:ala.x+y.x*ala.w, y:ala.y+y.y*ala.h, s:7}, yhine:y.t});
+    const e={kood:y.t==='hn'?'Häirenupp':'Evak. nool', uid:y.id, t:y.t==='hn'?'y_hn':'y_nool_'+(y.s||0), v:'roheline', F:7/2.2,
+      ikoon:{x:ala.x+y.x*ala.w, y:ala.y+y.y*ala.h, s:7}, yhine:y.t};
+    if(y.t==='hn' && y.ox!=null){ e.nool=prNool(e.ikoon.x, e.ikoon.y, 7/2+0.4, ala.x+y.ox*ala.w, ala.y+y.oy*ala.h); e.noolV='punane'; }
+    tulem.push(e);
   });
   return tulem;
 }
@@ -3860,7 +3890,7 @@ async function koostaPrindiSkeem(){
         doc.text(e.kood, e.kast.x+e.kast.w/2, e.kast.y+e.kast.h/2, {align:'center', baseline:'middle'}); }
       else doc.rect(e.kast.x,e.kast.y,e.kast.w,e.kast.h); });
     /* nooled */
-    L.margid.filter(e=>e.nool).forEach(e=>{ const c=PR_VARVID[e.v], N=e.nool, Lh=Math.max(1,e.F*0.9), B=Lh*0.45;
+    L.margid.filter(e=>e.nool).forEach(e=>{ const c=PR_VARVID[e.noolV||e.v], N=e.nool, Lh=Math.max(1,e.F*0.9), B=Lh*0.45;
       const dx=N.x2-N.x1, dy=N.y2-N.y1, len=Math.hypot(dx,dy)||1, ux=dx/len, uy=dy/len, bx=N.x2-ux*Lh, by=N.y2-uy*Lh;
       doc.setDrawColor(...c.ar); doc.setFillColor(...c.ar); doc.setLineWidth(Math.max(0.25,e.F*0.16)); doc.setLineCap('round');
       doc.line(N.x1,N.y1,bx,by); doc.triangle(N.x2,N.y2,bx-uy*B,by+ux*B,bx+uy*B,by-ux*B,'F'); });
