@@ -1,6 +1,6 @@
 /* Rovalis – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'rovalis-2026-10-09ar';
+const VERSIOON = 'rovalis-2026-10-09as';
 const FAILID = [
   './',
   './index.html',
