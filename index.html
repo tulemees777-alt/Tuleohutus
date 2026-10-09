@@ -503,7 +503,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 07.10.2026-AQ</div>
+    <div class="jalus">Rovalis OÜ · versioon 09.10.2026-AR</div>
   </div>
 </div>
 
@@ -520,8 +520,9 @@
   <div class="uusRida" id="skeemiTegevused">
     <button type="button" class="ikNupp" onclick="avaSkeemiImport()"><span class="ik" id="ikImp"></span>Impordi<span class="lisa"> skeem</span></button>
     <button type="button" class="ikNupp" id="nupEksSkeem" onclick="ekspordiSkeem()"><span class="ik" id="ikEks"></span>Ekspordi<span class="lisa"> skeem</span></button>
-    <button type="button" class="ikNupp" id="nupKeera" onclick="kysiKeeramine()" title="Keera selle korruse joonist 90°"><span class="ik" style="font-size:22px;font-weight:900;color:#1c63b7;display:inline-flex;align-items:center;justify-content:center">⟳</span>Keera</button>
+    <button type="button" class="ikNupp" id="nupKeera" onclick="kysiKeeramine()" title="Pööra selle korruse skeemi 90°"><span class="ik" style="font-size:22px;font-weight:900;color:#1c63b7;display:inline-flex;align-items:center;justify-content:center">⟳</span>Pööra<span class="lisa"> skeemi</span></button>
     <button type="button" class="ikNupp" id="nupPrindiSkeem" onclick="avaPrindiSkeem()"><span class="ik"><svg class="marki" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" fill="#fff"/><path d="M14 18V7h20v11" stroke="#1c63b7" stroke-width="4" fill="none" stroke-linejoin="round"/><rect x="6" y="18" width="36" height="16" rx="3" stroke="#1c63b7" stroke-width="4" fill="none"/><path d="M14 28h20v13H14z" stroke="#1c63b7" stroke-width="4" fill="#fff" stroke-linejoin="round"/><circle cx="35" cy="24" r="2.2" fill="#1c63b7"/></svg></span>Prindi<span class="lisa"> skeem</span></button>
+    <button type="button" class="ikNupp" id="nupKustutaSkeem" onclick="kustutaSkeemid()" title="Kustuta skeem" style="color:#c62828;border-color:#e57373"><span class="ik" style="font-size:20px;display:inline-flex;align-items:center;justify-content:center">🗑</span>Kustuta</button>
   </div>
   <div id="skeemiRiba"><span id="ribaLoend"></span></div>
   </div>
@@ -2754,7 +2755,7 @@ async function kysiKeeramine(){
   const m=pk(); if(!m||!plaanid[m]||!plaanid[m].lehed.length){ teade('Skeemi pole'); return; }
   if(joonKanvas){ teade('Lõpeta enne muutmine (Salvesta)'); return; }
   if(!(SKEEMI_KIRJED[m]&&SKEEMI_KIRJED[m].lehed)){ teade('Näidisskeemi ei saa keerata – keeramine on imporditud skeemidele'); return; }
-  const v=await kysi('Keera joonist', leheNimi(m,aktiivneLeht)+': joonis keeratakse 90°. Kustutid, voolikud, uksed, ATS ja nooled keeravad kaasa.',
+  const v=await kysi('⟳ Pööra skeemi', leheNimi(m,aktiivneLeht)+': skeem pööratakse 90°. Kustutid, voolikud, uksed, ATS ja nooled keeravad kaasa.',
     [{tekst:'⟲ Vasakule', klass:'tavaline', vaartus:-1},{tekst:'⟳ Paremale', klass:'tavaline', vaartus:1},{tekst:'Tühista', klass:'peamine', vaartus:null}]);
   if(v===1||v===-1) await keeraKorrus(v);
 }
@@ -2801,6 +2802,54 @@ async function keeraKorrus(suund){
     naitaLehte(m,aktiivneLeht);
     teade(tood.length?'Joonis keeratud':'Midagi ei keeratud');
   }catch(e){ teade('Keeramine ebaõnnestus: '+e.message); }
+}
+/* ---- skeemi kustutamine: korrus / liigi skeem / maja kõik skeemid (seadmed ja kontrolliandmed jäävad) ---- */
+function kustutaSkeemKoik(k){
+  delete plaanid[k]; delete SKEEMI_SILDID[k]; delete SKEEMI_KIRJED[k];
+  skeemKustuta(k); eemaldaLsPlaan(k);
+}
+async function kustutaSkeemiLeht(k, i){
+  const P=plaanid[k], S=SKEEMI_SILDID[k]; if(!P) return;
+  if(P.lehed.length<=1){ kustutaSkeemKoik(k); return; }
+  if(S){
+    S.korgused=P.lehed.map((_,q)=>lehtKorgus(S,q)); S.korrused=P.lehed.map((_,q)=>leheNimi(k,q));
+    S.korgused.splice(i,1); S.korrused.splice(i,1); S.korgus=S.korgused[0];
+    for(const kood in S.sildid){ const a=S.sildid[kood]; if(a[0]===i) delete S.sildid[kood]; else if(a[0]>i) a[0]--; }
+  }
+  P.lehed.splice(i,1); if(P.orig) P.orig.splice(i,1);
+  await salvestaSkeem(k);
+}
+async function kustutaSkeemid(){
+  const maja=valitudMaja(), m=pk(); if(!maja||!m||!plaanid[m]||!plaanid[m].lehed.length){ teade('Skeemi pole'); return; }
+  if(joonKanvas){ teade('Lõpeta enne muutmine (Salvesta)'); return; }
+  const imporditud=k=>!!(SKEEMI_KIRJED[k]&&SKEEMI_KIRJED[k].lehed);
+  const liigid=(kaardiFilter==='koik'?['tk','ttv','uks']:[skeemiTyyp]).filter(t=>plaanid[maja+':'+t]&&plaanid[maja+':'+t].lehed.length);
+  const koikLiigid=['tk','ttv','uks'].filter(t=>plaanid[maja+':'+t]&&plaanid[maja+':'+t].lehed.length);
+  if(![...liigid,...koikLiigid].some(t=>imporditud(maja+':'+t))){ teade('Näidisskeemi ei saa kustutada – kustutada saab imporditud skeeme'); return; }
+  const korrus=leheNimi(m,aktiivneLeht), v0=korruseVoti(korrus).voti, nimed={tk:'Kustutid',ttv:'Voolikud',uks:'Uksed'};
+  const valik=await kysi('🗑 Kustuta skeem', 'Mida kustutan? Seadmete nimekiri ja kontrolliandmed jäävad alles.', [
+    {tekst:'Ainult see korrus ('+korrus+')', klass:'ohtlik', vaartus:'korrus'},
+    {tekst:'Kogu skeem – '+liigid.map(t=>nimed[t]).join(', '), klass:'ohtlik', vaartus:'liik'},
+    {tekst:'Maja kõik skeemid', klass:'ohtlik', vaartus:'maja'},
+    {tekst:'Tühista', klass:'peamine', vaartus:null}]);
+  if(!valik) return;
+  const mida=valik==='korrus'?korrus+' ('+liigid.map(t=>nimed[t]).join(', ')+')':valik==='liik'?'kogu skeem: '+liigid.map(t=>nimed[t]).join(', '):'maja '+maja+' kõik skeemid';
+  const ok=await kysi('Oled täiesti kindel?', 'Kustutatakse '+mida+' koos märkide asukohtadega. Seda ei saa tagasi võtta – vajadusel tee enne „Ekspordi skeem“.',
+    [{tekst:'Jah, kustuta', klass:'ohtlik', vaartus:true},{tekst:'Ei', klass:'peamine', vaartus:false}]);
+  if(!ok) return;
+  let n=0;
+  if(valik==='korrus'){
+    for(const t of liigid){ const k=maja+':'+t; if(!imporditud(k)) continue;
+      const i=plaanid[k].lehed.findIndex((_,q)=>korruseVoti(leheNimi(k,q)).voti===v0); if(i<0) continue;
+      await kustutaSkeemiLeht(k,i); n++; }
+    if(kaardiFilter==='koik' && YHISED[maja] && YHISED[maja][v0]){ delete YHISED[maja][v0]; salvestaYhised(); }
+  }else{
+    for(const t of (valik==='maja'?koikLiigid:liigid)){ const k=maja+':'+t; if(!imporditud(k)) continue; kustutaSkeemKoik(k); n++; }
+    if(valik==='maja' && YHISED[maja]){ delete YHISED[maja]; salvestaYhised(); }
+  }
+  aktiivneLeht=0; skeemiValitud=null;
+  avaPlaan();
+  teade(n?'Kustutatud':'Midagi ei kustutatud');
 }
 /* lehe kõrgus (imporditud skeemis võivad lehed olla eri kõrgusega) */
 function lehtKorgus(S,j){ return (S.korgused&&S.korgused[j])||S.korgus; }
