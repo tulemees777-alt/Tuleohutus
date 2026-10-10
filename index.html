@@ -504,7 +504,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-BC</div>
+    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-BD</div>
   </div>
 </div>
 
@@ -592,6 +592,7 @@
     <div class="fotoRida" id="fotoRida"></div>
     <button class="skeemiNupp" id="nupSkeem" onclick="naitaSkeemil()">Näita skeemil</button>
     <button type="button" class="kustutaSeadeNupp" id="nupKustuta" onclick="vormKustutaVoiTaasta()">🗑 Kustuta</button>
+    <button type="button" class="kustutaSeadeNupp" id="nupKustutaLoplikult" style="display:none" onclick="vormKustutaLoplikult()">🗑 Kustuta lõplikult</button>
     <div class="vormNupud">
       <button class="loobu" onclick="sulgeVorm()">Loobu</button>
       <button class="salvesta" onclick="salvestaVorm()">Salvesta</button>
@@ -881,6 +882,19 @@ async function vormKustutaVoiTaasta(){
   avaKustutid(aktiivneTyyp);
   if(document.getElementById('plaanVaade').style.display==='flex') joonistaSildid();
 }
+/* kustutatud (läbikriipsutatud) seadme lõplik eemaldamine nimekirjast */
+async function vormKustutaLoplikult(){
+  const m=valitudMaja(), list=(andmed[m]&&andmed[m][aktiivneTyyp])||[], s=list.find(x=>x.kood===aktiivneKood); if(!s||!s.kustutatud) return;
+  const ok=await kysi('Kustuta lõplikult?', s.kood+' eemaldatakse nimekirjast päriselt koos kõigi andmetega (kuupäevad, märkus, fotod). Seda ei saa tagasi võtta. Kui impordid hiljem Exceli, kus see seade on, tuleb see uuesti.', [{tekst:'Loobu', klass:'peamine', vaartus:0},{tekst:'🗑 Kustuta lõplikult', klass:'ohtlik', vaartus:1}]);
+  if(!ok) return;
+  ajaluguLisa();
+  const i=list.indexOf(s); if(i>=0) list.splice(i,1);
+  const sk=m+':'+aktiivneTyyp, S=SKEEMI_SILDID[sk];
+  if(S && S.sildid[s.kood]){ delete S.sildid[s.kood]; await salvestaSkeem(sk); }
+  salvestaAndmed(); teade(s.kood+' kustutatud lõplikult');
+  sulgeVorm(); avaKustutid(aktiivneTyyp);
+  if(document.getElementById('plaanVaade').style.display==='flex') joonistaSildid();
+}
 function sulgeKustutid(){ document.getElementById('kustutidVaade').style.display='none'; }
 function avaVorm(kood){
   const m=valitudMaja();
@@ -925,6 +939,7 @@ function avaVorm(kood){
   const lk={tk:'kustuti',ttv:'voolik',uks:'uks'}[aktiivneTyyp]||'kustuti';
   nk.textContent=(s.kustutatud?'↺ Taasta ':'🗑 Kustuta ')+lk+' '+s.kood; nk.classList.toggle('taasta',!!s.kustutatud);
   if(kr){ kr.style.display=s.kustutatud?'block':'none'; kr.textContent='Märkus: Kustutatud '+(s.kustutatud?kpEst(s.kustutatud):'')+(s.kustutatud&&olekKirjeldus(s)?' · enne: '+olekKirjeldus(s):''); }
+  const nl=document.getElementById('nupKustutaLoplikult'); if(nl) nl.style.display=s.kustutatud?'block':'none';
   uuendaVormiVarvid();
   joonistaFotod();
   document.getElementById('vormVaade').style.display='flex';
