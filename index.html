@@ -504,7 +504,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-AZ</div>
+    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-BA</div>
   </div>
 </div>
 
@@ -1433,10 +1433,11 @@ function joonistaSildid(){
    ====================================================================== */
 let YHISED={}; try{ YHISED=JSON.parse(localStorage.getItem('rovalis_yhised_v1')||'{}')||{}; }catch(e){ YHISED={}; }
 function salvestaYhised(){ try{ localStorage.setItem('rovalis_yhised_v1', JSON.stringify(YHISED)); }catch(e){ teade('Salvestamine ebaõnnestus'); } }
-/* LM13 vaikimisi ATS häirenupud (kantud PDF-ist) – lisatakse ühe korra, kui kasutajal pole selle maja märke */
-try{ if(typeof LM13_YHISED!=='undefined' && !localStorage.getItem('rovalis_lm13_ats_v1')){
-  if(!YHISED.LM13){ YHISED.LM13=JSON.parse(JSON.stringify(LM13_YHISED)); localStorage.setItem('rovalis_yhised_v1', JSON.stringify(YHISED)); }
-  localStorage.setItem('rovalis_lm13_ats_v1','1'); } }catch(e){}
+/* LM13 vaikimisi ATS häirenupud (kantud PDF-ist) – lisatakse ühe korra id järgi (olemasolevaid ei puudutata, topelt ei teki) */
+try{ if(typeof LM13_YHISED!=='undefined' && !localStorage.getItem('rovalis_lm13_ats_v2')){
+  YHISED.LM13=YHISED.LM13||{};
+  for(const v in LM13_YHISED){ const L=YHISED.LM13[v]=YHISED.LM13[v]||[]; LM13_YHISED[v].forEach(y=>{ if(!L.some(z=>z.id===y.id)) L.push(JSON.parse(JSON.stringify(y))); }); }
+  localStorage.setItem('rovalis_yhised_v1', JSON.stringify(YHISED)); localStorage.setItem('rovalis_lm13_ats_v2','1'); } }catch(e){}
 let teisedNahtav=false;
 const IK_HN=document.querySelector('#fabHn img').getAttribute('src');
 const NOOLE_TEE='M30 214 H330 V96 L530 280 L330 464 V346 H30 Z';
