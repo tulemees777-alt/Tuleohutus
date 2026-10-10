@@ -504,7 +504,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-AY</div>
+    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-AZ</div>
   </div>
 </div>
 
@@ -2743,6 +2743,12 @@ async function kustutaMajaDialoog(){
    ====================================================================== */
 /* LM13 vana skeemi (1800 px, 10.10.2026 eel) koordinaadid → uus pilt: [a,b,tx,c,d,ty] korruse kohta */
 const LM13_VANA_MUUND = {"tk": [[1.285422, 0.000245, -113.462047, -0.000245, 1.285422, -280.629698], [2.326071, -0.000288, -1064.767182, 0.000288, 2.326071, -738.159618], [1.266121, 5.3e-05, -87.764327, -5.3e-05, 1.266121, -267.061185]], "ttv": [[1.285523, -0.000145, -113.327029, 0.000145, 1.285523, -281.019883], [2.325909, -4.4e-05, -1064.753821, 4.4e-05, 2.325909, -737.810233], [1.265841, -0.00027, -87.472063, 0.00027, 1.265841, -267.484377], [2.625617, -0.000222, -1207.555437, 0.000222, 2.625617, -818.84836]]};
+/* PDF-ist imporditud LM13 skeem (laius rec.S.laius) → uus pilt: korruse a0 lehe mõõt PW, kärpe algus (x0,y0), uus laius 2000 */
+function LM13_IMPORT_MUUND(f,laius){
+  const PW=[2048,1907,1908,1917], C=[[100,240,1870],[480,340,1400],[70,225,1750],[490,330,1300]][f]||[0,0,2000];
+  const s=2000/(C[2]-C[0]), k=(PW[f]||laius)/laius*s;
+  return [k,0,-C[0]*s,0,k,-C[1]*s];
+}
 const SKEEMI_KIRJED={};
 let skeemDb=null;
 function skeemBaas(){
@@ -2778,12 +2784,13 @@ const skeemidValmis=(async()=>{
       /* äpiga kaasas oleva skeemi uus versioon (nt LM13 10.10.2026): vana salvestatud koopia (vana pilt, vanad kastid) visatakse minema,
          kuid kasutaja ise lisatud märgid (oma märk, mida vaikeskeemil pole) teisaldatakse uuele pildile */
       const D=SKEEMI_SILDID[rec.pk];
-      if(!rec.lehed && D && D.v && (!rec.S || rec.S.v!==D.v)){
+      const ptKorras=!localStorage.getItem('rovalis_lm13_puhastus_v1');   /* ühekordne: ka vanasti imporditud LM13 skeem (PDF kastidega) tuleb asendada */
+      if(D && D.v && (!rec.S || rec.S.v!==D.v) && (!rec.lehed || (ptKorras && rec.pk.startsWith('LM13:')))){
         try{
           const TR=LM13_VANA_MUUND[rec.pk.split(':')[1]];
           if(rec.pk.startsWith('LM13:') && TR && rec.S && rec.S.sildid) for(const kood in rec.S.sildid){
-            const a=rec.S.sildid[kood]; if(!a[7] || D.sildid[kood] || (rec.S.laius!==2000 && !TR[a[0]])) continue;
-            const m=rec.S.laius===2000?[1,0,0,0,1,0]:TR[a[0]], f=(x,y)=>[Math.round(m[0]*x+m[1]*y+m[2]), Math.round(m[3]*x+m[4]*y+m[5])];
+            const a=rec.S.sildid[kood]; if(!a[7] || D.sildid[kood] || (!rec.lehed && rec.S.laius!==2000 && !TR[a[0]])) continue;
+            const m=rec.lehed?LM13_IMPORT_MUUND(a[0],rec.S.laius):(rec.S.laius===2000?[1,0,0,0,1,0]:TR[a[0]]), f=(x,y)=>[Math.round(m[0]*x+m[1]*y+m[2]), Math.round(m[3]*x+m[4]*y+m[5])];
             const p=f(a[1],a[2]), q=f(a[5],a[6]), b=a.slice(); b[1]=p[0]; b[2]=p[1]; b[5]=q[0]; b[6]=q[1];
             if(a[10]!=null){ const r=f(a[10],a[11]); b[10]=r[0]; b[11]=r[1]; }
             D.sildid[kood]=b;
@@ -2795,6 +2802,7 @@ const skeemidValmis=(async()=>{
       if(rec.S) SKEEMI_SILDID[rec.pk]=rec.S;
       if(rec.lehed){ plaanid[rec.pk]={nimi:rec.nimi, lehed:rec.lehed, orig:rec.orig||rec.lehed.slice()}; }
     });
+    try{ localStorage.setItem('rovalis_lm13_puhastus_v1','1'); }catch(e){}
   }catch(e){ console.warn('skeemid:',e); }
 })();
 /* ---- korruse joonise keeramine 90° (külili imporditud PDF) – märgid keeravad kaasa ---- */
