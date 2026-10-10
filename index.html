@@ -504,7 +504,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 09.10.2026-AT</div>
+    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-AV</div>
   </div>
 </div>
 
@@ -771,7 +771,14 @@ function loePlaanid(){
   const p=JSON.parse(JSON.stringify(VAIKEPLAANID));
   try{
     const s=localStorage.getItem('rovalis_plaanid_v2');
-    if(s){ const o=JSON.parse(s); for(const k in o) p[k]=o[k]; }
+    if(s){ const o=JSON.parse(s); for(const k in o){
+      /* äpiga kaasas oleva skeemi pildid vahetati (nt LM13 10.10.2026): vana salvestatud koopia ei sobi uute märkidega → kasuta uusi */
+      const V=VAIKEPLAANID[k], x=o[k];
+      if(V && x && x.lehed){
+        const vana = x.orig && x.orig.length ? !x.orig.every(u=>V.lehed.includes(u)) : x.lehed.length!==V.lehed.length;
+        if(vana) continue;
+      }
+      p[k]=x; } }
   }catch(e){}
   /* hoia iga lehe puhas originaal, et märkmeid saaks kustutada */
   for(const k in p){
