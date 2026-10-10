@@ -504,7 +504,7 @@
 
     <button class="nupp skann" onclick="skanneeri()">Skanneeri</button>
 
-    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-BD</div>
+    <div class="jalus">Rovalis OÜ · versioon 10.10.2026-BE</div>
   </div>
 </div>
 
@@ -664,6 +664,7 @@
   <div class="chips" id="ppChips"></div>
   <div class="vihje" id="ppVihje"></div>
   <div class="liug">Tähise suurus <div class="suurNupud" id="ppSuurus"><button type="button" data-s="1">Väike</button><button type="button" data-s="1.3">Keskmine</button><button type="button" data-s="1.6">Suur</button></div></div>
+  <div class="liug">Märkide suurus <div class="suurNupud" id="ppMk"><button type="button" data-d="-1">−</button><button type="button" id="ppMkVaartus" disabled style="min-width:64px">100%</button><button type="button" data-d="1">+</button></div><span class="vaikeT" id="ppMkSel">kehtib kõigile selle korruse märkidele</span></div>
   <div class="liug">Paber (prindiks) <select id="ppPaber"><option value="A4">A4</option><option value="A3">A3</option><option value="A1">A1</option></select><span class="vaikeT">kiri prindil vähemalt 3 mm</span></div>
 </div>
 <input type="file" id="fotoSisend" accept="image/*" capture="environment" style="display:none">
@@ -1430,7 +1431,7 @@ function joonistaSildid(){
   if(teisedNahtav || (paigutus.aktiivne && kaardiFilter!=='koik')) joonistaTeised(kiht, maja, m, S, j);   /* ühe liigi lehel muutmise ajal: teised liigid tuhmilt */
   if(filtriVarv) kiht.dataset.filter=filtriVarv; else delete kiht.dataset.filter;
   kiht.style.setProperty('--s', Math.max(1,S.suurus||1));
-  kiht.style.setProperty('--f', margiCqw(S,j).toFixed(4));
+  kiht.style.setProperty('--f', margiCqw(S,j).toFixed(4)); if(typeof naitaMk==='function') naitaMk();
   kiht.style.display='block';
   paigutaKiht();
   const rl=document.getElementById('ribaLoend');
@@ -3390,7 +3391,7 @@ function alustaPaigutus(){
   paigutus.aktiivne=true; paigutus.uus=false; paigutus.liiguta=null; paigutus.mark=null; paigutus.lisa=false; paigutus.valitud=null;
   document.getElementById('plaanVaade').classList.add('paigutus');
   document.getElementById('siltInfo').style.display='none';
-  const S=seadmeSkeem(); naitaSuurus(S); document.getElementById('ppPaber').value=S.paber||'A3';
+  const S=seadmeSkeem(); naitaSuurus(S); naitaMk(); document.getElementById('ppPaber').value=S.paber||'A3';
   joonistaSildid();
   return true;
 }
@@ -3654,6 +3655,21 @@ async function votaTagasi(){
 /* märkide suurus: 3 kindlat valikut, kehtib kogu skeemile */
 const SUURUSED=[[1,'Väike'],[1.3,'Keskmine'],[1.6,'Suur']];
 function suuruseNimi(v){ let b=SUURUSED[0]; SUURUSED.forEach(x=>{ if(Math.abs(x[0]-v)<Math.abs(b[0]-v)) b=x; }); return b; }
+function mkLeht(){ return vaikeLeht(pk(),aktiivneLeht); }
+function naitaMk(){
+  const e=document.getElementById('ppMkVaartus'); if(!e) return;
+  const S=seadmeSkeem(), j=mkLeht(); const k=(S&&S.margiK&&S.margiK[j])||1;
+  e.textContent=Math.round(k*100)+'%';
+}
+document.getElementById('ppMk').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-d]'); if(!b) return;
+  const S=seadmeSkeem(); if(!S) return;
+  const j=mkLeht(); if(j<0) return;
+  ajaluguLisa();
+  const n=Math.max(S.korgused?S.korgused.length:1,j+1), A=[]; for(let i=0;i<n;i++) A.push((S.margiK&&S.margiK[i])||1);
+  A[j]=Math.min(3,Math.max(0.4,Math.round(A[j]*(+b.dataset.d>0?1.1:1/1.1)*100)/100));
+  S.margiK=A; naitaMk(); joonistaSildid(); await salvestaSkeem(pk());
+});
 function naitaSuurus(S){
   const v=suuruseNimi(Math.max(1,(S&&S.suurus)||1))[0];
   document.querySelectorAll('#ppSuurus button').forEach(b=>b.classList.toggle('v', +b.dataset.s===v));
