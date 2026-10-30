@@ -1,6 +1,6 @@
 {
-  "name": "Rovalis",
-  "short_name": "Rovalis",
+  "name": "Evakor",
+  "short_name": "Evakor",
   "description": "Tulekustutite, voolikute ja uste kontroll ning paiknemisskeemid",
   "lang": "et",
   "id": "./",
@@ -8,8 +8,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#1c63b7",
+  "background_color": "#2D3134",
+  "theme_color": "#2D3134",
   "icons": [
     {
       "src": "icons/icon-192.png",
