@@ -1,6 +1,6 @@
 /* Evakor – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'evakor-2026-10-30bi';
+const VERSIOON = 'evakor-2026-10-30bj';
 const FAILID = [
   './',
   './index.html',
