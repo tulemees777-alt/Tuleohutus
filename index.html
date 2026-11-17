@@ -534,7 +534,7 @@
 
     <button class="nupp skann" onclick="skanneeri()"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#2D3134" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2M18 18h2v2"/></svg>Skanneeri QR</button>
 
-    <div class="jalus">Evakor OÜ · versioon 17.11.2026-BT</div>
+    <div class="jalus">Evakor OÜ · versioon 17.11.2026-BU</div>
   </div>
 </div>
 
@@ -4339,10 +4339,32 @@ taidaMajaValik('');
   kloon('button[onclick*="failImport"] .marki','ikImp'); kloon('button[onclick*="failImport"] .marki','ikImp2'); kloon('button[onclick*="failImport"] .marki','ikImp3');
   kloon('button[onclick="eksport()"] .marki','ikEks'); kloon('button[onclick="avaPlaan()"] .marki','ikPin');
 })();
-function genereeriQR(){
+/* varusildid: iga korruse kohta järgmine vaba number (nt TK 1.19 → TK 1.20) */
+function qrVarukoodid(list){
+  const korr={};
+  list.forEach(s=>{ const r=String(s.kood).match(/^(.*?)(\d+)\.(\d+)$/); if(!r) return;
+    const v=r[1]+r[2]; if(!korr[v]||+r[3]>korr[v].n) korr[v]={eel:r[1]+r[2]+'.', n:+r[3]}; });
+  return Object.values(korr).map(k=>({kood:k.eel+(k.n+1), varu:true}));
+}
+async function genereeriQR(){
   if(typeof QRCode==='undefined'){ teade('QR-siltide tegemine vajab internetiühendust'); return; }
   const m=valitudMaja();
-  const list=(andmed[m]&&andmed[m][aktiivneTyyp])||[];
+  const nim=ty=>((andmed[m]&&andmed[m][ty])||[]).filter(s=>!s.kustutatud);
+  const tk=nim('tk'), ttv=nim('ttv'), uks=nim('uks');
+  let list=nim(aktiivneTyyp);
+  if([tk,ttv,uks].filter(l=>l.length).length>1){
+    const vtk=qrVarukoodid(tk), vttv=qrVarukoodid(ttv);
+    const kk=tk.concat(vtk, ttv, vttv);
+    const nupud=[
+      {tekst:'Ainult '+({tk:'kustutid',ttv:'voolikukapid',uks:'uksed'}[aktiivneTyyp])+' ('+list.length+')', vaartus:'yks'},
+      {tekst:'Kustutid + kapid + varusildid ('+kk.length+')', vaartus:'kk'}];
+    if(uks.length) nupud.push({tekst:'Kõik + uksed ('+(kk.length+uks.length)+')', vaartus:'koik'});
+    nupud.push({tekst:'Loobu', vaartus:null});
+    const v=await kysi('Milliseid QR-silte prindin?', 'Varusildid: '+vtk.concat(vttv).map(x=>x.kood).join(', ')+' · lehel 44 kohta', nupud);
+    if(!v) return;
+    if(v==='kk') list=kk;
+    if(v==='koik') list=kk.concat(uks);
+  }
   if(!list.length){ teade('Nimekiri on tühi'); return; }
   teade('Genereerin QR-silte…');
   const peit=document.createElement('div');
