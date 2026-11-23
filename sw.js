@@ -1,6 +1,6 @@
 /* Evakor – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'evakor-2026-11-17bu';
+const VERSIOON = 'evakor-2026-11-23bv';
 const FAILID = [
   './',
   './index.html',
@@ -17,7 +17,8 @@ const FAILID = [
   './lib/exceljs.min.js',
   './lib/jspdf.umd.min.js',
   './lib/jspdf.plugin.autotable.min.js',
-  './lib/skeemid.js'
+  './lib/skeemid.js',
+  './lib/skeemid_vj.js'
 ];
 
 self.addEventListener('install', e => {
