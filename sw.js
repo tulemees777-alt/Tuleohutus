@@ -1,6 +1,8 @@
 /* Evakor – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'evakor-2026-11-23bw';
+const VERSIOON = 'evakor-2026-11-23bx';
+/* suured skeemifailid eraldi vahemälus – ei kustu äpi uuendamisel; uus versioon = uus ?v= */
+const SUURED = 'evakor-suured';
 const FAILID = [
   './',
   './index.html',
@@ -17,9 +19,9 @@ const FAILID = [
   './lib/exceljs.min.js',
   './lib/jspdf.umd.min.js',
   './lib/jspdf.plugin.autotable.min.js',
-  './lib/skeemid.js',
-  './lib/skeemid_vj.js'
+  './lib/skeemid.js'
 ];
+/* lib/skeemid_vj.js (VJ skeemid, ~7.5 MB) ei ole siin: see laetakse alles VJ skeemi avamisel ja jääb siis vahemällu */
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -32,7 +34,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(k => Promise.all(k.filter(n => n !== VERSIOON).map(n => caches.delete(n))))
+      .then(k => Promise.all(k.filter(n => n !== VERSIOON && n !== SUURED).map(n => caches.delete(n))))
       .then(() => self.clients.claim())
   );
 });
@@ -59,6 +61,16 @@ self.addEventListener('fetch', e => {
       vorgust.then(r => { clearTimeout(t); anna(r); })
         .catch(() => { clearTimeout(t); malust().then(r => r ? anna(r) : anna(new Response('Võrguühendus puudub', { status: 503 }))); });
     }));
+    return;
+  }
+
+  /* VJ skeemid: oma vahemälust (täpne ?v=), puudumisel võrgust ja jäta meelde; vanad versioonid kustu */
+  if (url.pathname.endsWith('/lib/skeemid_vj.js')) {
+    e.respondWith(caches.open(SUURED).then(c => c.match(req).then(v => v || fetch(req).then(r => {
+      if (r.ok) { const k = r.clone();
+        c.keys().then(ks => Promise.all(ks.filter(q => new URL(q.url).pathname === url.pathname && q.url !== req.url).map(q => c.delete(q)))).then(() => c.put(req, k)); }
+      return r;
+    }))));
     return;
   }
 
