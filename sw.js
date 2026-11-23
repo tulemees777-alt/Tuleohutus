@@ -1,6 +1,6 @@
 /* Evakor – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'evakor-2026-11-23bx';
+const VERSIOON = 'evakor-2026-11-23by';
 /* suured skeemifailid eraldi vahemälus – ei kustu äpi uuendamisel; uus versioon = uus ?v= */
 const SUURED = 'evakor-suured';
 const FAILID = [
@@ -64,8 +64,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  /* VJ skeemid: oma vahemälust (täpne ?v=), puudumisel võrgust ja jäta meelde; vanad versioonid kustu */
-  if (url.pathname.endsWith('/lib/skeemid_vj.js')) {
+  /* VJ skeemid ja nende PDF-id (terav suum): oma vahemälust (täpne ?v=), puudumisel võrgust ja jäta meelde; vanad versioonid kustu */
+  if (url.pathname.endsWith('/lib/skeemid_vj.js') || url.pathname.includes('/lib/vj/')) {
     e.respondWith(caches.open(SUURED).then(c => c.match(req).then(v => v || fetch(req).then(r => {
       if (r.ok) { const k = r.clone();
         c.keys().then(ks => Promise.all(ks.filter(q => new URL(q.url).pathname === url.pathname && q.url !== req.url).map(q => c.delete(q)))).then(() => c.put(req, k)); }

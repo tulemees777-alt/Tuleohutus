@@ -187,6 +187,7 @@
   .kinnitusNupud .ei{background:#e6ecf4; color:var(--tume);}
   #plaanPilt{flex:1; overflow:auto; padding:0 14px 14px; position:relative;}
   #plaanKiht{position:absolute; pointer-events:none; display:none;}
+  #teravKiht{position:absolute; pointer-events:none; display:none;}   /* suumitud ala algsest PDF-ist (terav) */
   #plaanKiht .silt{position:absolute; border-radius:3px; border:2px solid; box-sizing:border-box;}
   #plaanKiht .silt.roheline{background:rgba(29,167,71,.30); border-color:#1da747;}
   #plaanKiht .silt.kollane{background:rgba(255,193,7,.40); border-color:#e0a800;}
@@ -536,7 +537,7 @@
 
     <button class="nupp skann" onclick="skanneeri()"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#2D3134" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2M18 18h2v2"/></svg>Skanneeri QR</button>
 
-    <div class="jalus">Evakor OÜ · versioon 23.11.2026-BX</div>
+    <div class="jalus">Evakor OÜ · versioon 23.11.2026-BY</div>
   </div>
 </div>
 
@@ -827,8 +828,19 @@ function loePlaanid(){
   }
   return p;
 }
+/* eraldi failist laetavad suured vaikeskeemid: pliiatsimärkmetega lehed hoitakse IndexedDB-s (localStorage'isse ei mahu) */
+const LAISAD_PLAANID=['VJ:uks'];
+async function salvestaJoonised(m){
+  const P=plaanid[m]; if(!P) return;
+  const j={}; let n=0; P.lehed.forEach((u,i)=>{ if(P.orig && P.orig[i] && u!==P.orig[i]){ j[i]=u; n++; } });
+  try{ await skeemidValmis; }catch(e){}
+  const rec=SKEEMI_KIRJED[m]||{pk:m, S:null, nimi:P.nimi||'', lehed:null, orig:null};
+  rec.joonised=n?j:null; SKEEMI_KIRJED[m]=rec;
+  try{ await skeemPane(rec); eemaldaLsPlaan(m); }catch(e){ teade('Märkmete salvestamine ebaõnnestus: '+e.message); }
+}
 function salvestaPlaanid(m){
   if(typeof SKEEMI_KIRJED!=='undefined' && SKEEMI_KIRJED[m] && SKEEMI_KIRJED[m].lehed){ salvestaSkeem(m); return; }
+  if(LAISAD_PLAANID.includes(m)){ salvestaJoonised(m); return; }
   try{
     const s=localStorage.getItem('rovalis_plaanid_v2');
     const o=s?JSON.parse(s):{};
@@ -1131,11 +1143,13 @@ function vjSkeemidOlemas(){ return typeof VJ_LEHED!=='undefined' && plaanid['VJ:
 let vjLaadimine=null;
 function vjSkeemidLae(){
   if(!vjLaadimine) vjLaadimine=new Promise((ok,viga)=>{
-    const valmis=()=>{
+    const valmis=async()=>{
       VAIKEPLAANID['VJ:uks'].lehed=VJ_LEHED.slice();
-      const P=plaanid['VJ:uks'];
-      if(!P || !P.lehed || !P.lehed.length) plaanid['VJ:uks']={nimi:VAIKEPLAANID['VJ:uks'].nimi, lehed:VJ_LEHED.slice(), orig:VJ_LEHED.slice()};
-      else if(!P.orig || !P.orig.length) P.orig=VJ_LEHED.slice();
+      try{ await skeemidValmis; }catch(e){}
+      /* alati äpiga kaasas olevad pildid; salvestatud pliiatsimärkmetega lehed peale */
+      const P=plaanid['VJ:uks']={nimi:VAIKEPLAANID['VJ:uks'].nimi, lehed:VJ_LEHED.slice(), orig:VJ_LEHED.slice()};
+      const J=SKEEMI_KIRJED['VJ:uks']&&SKEEMI_KIRJED['VJ:uks'].joonised;
+      if(J) for(const i in J) if(P.lehed[i] && J[i]) P.lehed[i]=J[i];
       ok();
     };
     if(typeof VJ_LEHED!=='undefined'){ valmis(); return; }
@@ -1283,6 +1297,7 @@ function plaanTagasi(){
   sulgePlaan();
 }
 function sulgePlaan(){
+  teravPeida();
   if(paigutus.aktiivne) lopetaPaigutus();
   clearTimeout(menyyTaimer); menyyKinni=false; document.getElementById('plaanVaade').classList.remove('menyyAuto','menyyPeidus');
   lopetaJoonistus(false);
@@ -1390,6 +1405,52 @@ function paigutaKiht(){
   k.style.width=img.offsetWidth+'px'; k.style.height=img.offsetHeight+'px';
   if(typeof joonistaNooled==='function') requestAnimationFrame(joonistaNooled);
 }
+/* ---- terav suum: kui skeem on suurendatud üle pildi täpsuse, joonistatakse nähtav osa algsest PDF-ist (vektor, ekraani täpsusega) ---- */
+const TERAV_PDF={'VJ:uks':['k1','1','1a','2','3','4','5','6'].map(n=>'lib/vj/'+n+'.pdf?v=1')};   /* järjekord = vaikeskeemi lehed */
+const teravDok={}; let teravTask=null, teravTaimer=null, teravNr=0;
+function teravPeida(){ teravNr++; clearTimeout(teravTaimer); const c=document.getElementById('teravKiht'); if(c) c.style.display='none'; if(teravTask){ try{ teravTask.cancel(); }catch(e){} teravTask=null; } }
+function teravPlaan(){ clearTimeout(teravTaimer); teravTaimer=setTimeout(teravJoonista,300); }
+function teravDokument(url){
+  if(!teravDok[url]) teravDok[url]=fetch(url).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); })
+    .then(b=>pdfjsLib.getDocument({data:new Uint8Array(b)}).promise).catch(e=>{ delete teravDok[url]; throw e; });
+  return teravDok[url];
+}
+async function teravJoonista(){
+  const nr=++teravNr;
+  const m=pk(), L=TERAV_PDF[m], img=document.getElementById('plaanImg'), cont=document.getElementById('plaanPilt');
+  const k0=document.getElementById('teravKiht'), peida=()=>{ if(k0) k0.style.display='none'; };
+  if(!L || typeof pdfjsLib==='undefined' || joonKanvas || !img || img.style.display==='none' || !img.naturalWidth || !plaanid[m] || document.getElementById('plaanVaade').style.display==='none'){ peida(); return; }
+  const P=plaanid[m], i=aktiivneLeht;
+  if(!P.lehed[i] || (P.orig && P.orig[i] && P.lehed[i]!==P.orig[i])){ peida(); return; }   /* pliiatsimärkmetega leht: jääb pilt */
+  const j=vaikeLeht(m,i); if(j<0 || !L[j]){ peida(); return; }
+  const dpr=window.devicePixelRatio||1, W=img.offsetWidth, H=img.offsetHeight;
+  if(W*dpr <= img.naturalWidth*1.1){ peida(); return; }   /* pilt on selles suuruses piisavalt terav */
+  const x0=Math.max(img.offsetLeft, cont.scrollLeft), y0=Math.max(img.offsetTop, cont.scrollTop);
+  const x1=Math.min(img.offsetLeft+W, cont.scrollLeft+cont.clientWidth), y1=Math.min(img.offsetTop+H, cont.scrollTop+cont.clientHeight);
+  if(x1<=x0 || y1<=y0){ peida(); return; }
+  let page;
+  try{ page=await (await teravDokument(L[j])).getPage(1); }catch(e){ peida(); return; }   /* ilma netita / fail puudub: jääb tavaline pilt */
+  if(nr!==teravNr) return;
+  const v1=page.getViewport({scale:1}), vp=page.getViewport({scale:W/v1.width*dpr});
+  const cw=Math.round((x1-x0)*dpr), ch=Math.round((y1-y0)*dpr);
+  const c=document.createElement('canvas'); c.width=cw; c.height=ch;
+  const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cw,ch);
+  teravTask=page.render({canvasContext:ctx, viewport:vp, transform:[1,0,0,1,-(x0-img.offsetLeft)*dpr,-(y0-img.offsetTop)*dpr]});
+  try{ await teravTask.promise; }catch(e){ return; }
+  teravTask=null;
+  if(nr!==teravNr || img.offsetWidth!==W) return;
+  let k=document.getElementById('teravKiht');
+  if(!k){ k=document.createElement('canvas'); k.id='teravKiht'; cont.insertBefore(k, document.getElementById('plaanKiht')); }
+  k.width=cw; k.height=ch; k.getContext('2d').drawImage(c,0,0);
+  Object.assign(k.style,{left:x0+'px', top:y0+'px', width:(x1-x0)+'px', height:(y1-y0)+'px', display:'block'});
+}
+(function(){
+  const img=document.getElementById('plaanImg'), cont=document.getElementById('plaanPilt'); if(!img||!cont) return;
+  cont.addEventListener('scroll', teravPlaan, {passive:true});
+  img.addEventListener('load', ()=>{ teravPeida(); teravPlaan(); });
+  if(window.ResizeObserver) new ResizeObserver(()=>{ teravPeida(); teravPlaan(); }).observe(img);
+  window.addEventListener('resize', ()=>{ teravPeida(); teravPlaan(); });
+})();
 /* paberi järgi märgi suurus: A3/A4/A1 väljaprindil märk 7 mm (ISO 23601), tähis ~3 mm */
 const PABERID={A4:[297,210],A3:[420,297],A1:[841,594]};
 function paberNimiMm(w,h){ const L=Math.max(w,h); return L<=310?'A4':L<=440?'A3':L<=620?'A2':L<=870?'A1':'A0'; }
@@ -2087,6 +2148,7 @@ function kysiAsendiLuba(){   /* iPhone: luba küsitakse nupuvajutusel */
   DeviceOrientationEvent.requestPermission().then(v=>{ if(v==='granted') kuulaAsendit(); }).catch(()=>{});
 }
 function alustaJoonistus(){
+  teravPeida();
   kysiAsendiLuba();
   const img=document.getElementById('plaanImg');
   if(!img.src || joonKanvas) return;
@@ -2225,6 +2287,7 @@ function lopetaJoonistus(salvesta){
   uuendaTooriistad();
   kinnitaFabid();
   joonistaSildid();
+  teravPlaan();
 }
 
 /* ---- kuupäevade abifunktsioonid ---- */
@@ -2872,7 +2935,7 @@ async function skeemKustuta(k){
 async function salvestaSkeem(k){
   const S=SKEEMI_SILDID[k]; if(!S) return;
   const vana=SKEEMI_KIRJED[k]||{};
-  const rec={pk:k, S, nimi:(plaanid[k]&&plaanid[k].nimi)||vana.nimi||'', lehed:null, orig:null};
+  const rec={pk:k, S, nimi:(plaanid[k]&&plaanid[k].nimi)||vana.nimi||'', lehed:null, orig:null, joonised:vana.joonised||null};
   if(vana.lehed && plaanid[k]){ rec.lehed=plaanid[k].lehed; rec.orig=plaanid[k].orig; }
   SKEEMI_KIRJED[k]=rec;
   try{ await skeemPane(rec); }catch(e){ teade('Skeemi salvestamine ebaõnnestus: '+e.message); }
