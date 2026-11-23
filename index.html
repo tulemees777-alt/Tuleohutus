@@ -537,7 +537,7 @@
 
     <button class="nupp skann" onclick="skanneeri()"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#2D3134" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2M18 18h2v2"/></svg>Skanneeri QR</button>
 
-    <div class="jalus">Evakor OÜ · versioon 23.11.2026-BY</div>
+    <div class="jalus">Evakor OÜ · versioon 23.11.2026-BZ</div>
   </div>
 </div>
 
@@ -4522,16 +4522,21 @@ async function genereeriQR(){
   });
   peit.remove();
   const majaNimi=document.querySelector('#maja option:checked').textContent;
-  /* mõõdud nagu olemasoleval SK3 lehel: QR ~15x15 mm, kiri kõrval, 4 tulpa, reavahe ~25 mm */
+  /* APLI 44 (4×11, silt 48,5×25,4 mm, äär üleval/all 8,8 mm, külgedel 8 mm): iga leht täpselt A4, sildid täpselt siltide kohal */
   let html='<html><head><meta charset="utf-8"><title>QR sildid – '+majaNimi+'</title><style>'
-    +'@page{size:A4;margin:15mm 0 10mm 17.2mm;} body{font-family:Arial;margin:0;} '
-    +'.grid{display:grid;grid-template-columns:repeat(4,47.5mm);row-gap:9.9mm;} '
-    +'.silt{display:flex;align-items:center;gap:4.3mm;page-break-inside:avoid;} '
-    +'.silt img{width:15.2mm;height:15.2mm;} .silt div{font-weight:bold;font-size:11pt;white-space:nowrap;line-height:1.25;} .silt div.pikk{font-size:9.5pt;} .silt .lisa{font-size:7.5pt;color:#333;}'
-    +'</style></head><body><div class="grid">';
+    +'@page{size:A4;margin:0;} html,body{margin:0;padding:0;} body{font-family:Arial,Helvetica,sans-serif;} '
+    +'.leht{width:210mm;height:297mm;box-sizing:border-box;padding:8.8mm 8mm;overflow:hidden;page-break-after:always;break-after:page;} .leht:last-child{page-break-after:auto;break-after:auto;} '
+    +'.grid{display:grid;grid-template-columns:repeat(4,48.5mm);grid-auto-rows:25.4mm;} '
+    +'.silt{box-sizing:border-box;display:flex;align-items:center;gap:2.6mm;padding-left:3mm;overflow:hidden;} '
+    +'.silt img{width:15.2mm;height:15.2mm;flex:none;} .silt div{font-weight:bold;font-size:11pt;white-space:nowrap;line-height:1.25;} .silt div.pikk{font-size:9.5pt;} .silt .lisa{font-size:7.5pt;color:#333;}'
+    +'</style></head><body>';
   const pikk=sildid.some(x=>x.kood.length>8);
-  sildid.forEach(s=>{ html+='<div class="silt"><img src="'+s.pilt+'"><div'+(pikk?' class="pikk"':'')+'>'+s.maja+'<br>'+s.kood+(s.lisa?'<br><span class="lisa">'+s.lisa+'</span>':'')+'</div></div>'; });
-  html+='</div><script>window.onload=()=>window.print();<\/script></body></html>';
+  sildid.forEach((s,i)=>{
+    if(i%44===0) html+=(i?'</div></div>':'')+'<div class="leht"><div class="grid">';
+    html+='<div class="silt"><img src="'+s.pilt+'"><div'+(pikk?' class="pikk"':'')+'>'+s.maja+'<br>'+s.kood+(s.lisa?'<br><span class="lisa">'+s.lisa+'</span>':'')+'</div></div>';
+  });
+  html+='</div></div>';
+  html+='<script>window.onload=()=>window.print();<\/script></body></html>';
   const aken=window.open('','_blank');
   if(!aken){ teade('Luba hüpikaknad, et silte printida'); return; }
   aken.document.write(html);
