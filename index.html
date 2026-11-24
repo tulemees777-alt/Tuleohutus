@@ -364,7 +364,6 @@
   #plaanKiht .silt.oma.punane{background:#fde8e8; color:#9b1c1c;}
   /* kontrollitud, aga puudusega: sinine joon ümber (variant B) */
   #plaanKiht .silt.kp{outline:.2em solid #1f6fd6; outline-offset:.2em;}
-  #plaanKiht .ikoon.kp{outline:max(2px,calc(var(--ik,20px) * .1)) solid #1f6fd6; outline-offset:max(2px,calc(var(--ik,20px) * .1)); border-radius:50%;}
   .tulukas.kp{box-shadow:0 0 0 2px #fff, 0 0 0 4.5px #1f6fd6;}
   #plaanKiht .silt.oma.kollane{background:#fff6d6; color:#6d4c00;}
   #plaanKiht .silt.oma.roheline{background:#e3f6e9; color:#0f5f28;}
@@ -1524,7 +1523,7 @@ function joonistaSildid(){
     d.style.top=(a[2]/K*100)+'%';
     if(a[7]){
       /* oma silt: ikoon + nimi, keskpunkt (a1,a2), seadme koht (a5,a6) */
-      d.classList.add('oma');
+      d.classList.add('oma'); if(kp) d.classList.add('kp');   /* sinine joon tähise (numbri) ümber */
       d.dataset.tx=a[5]/SS.laius*100; d.dataset.ty=a[6]/K*100; d.dataset.v=v;
       d.innerHTML='<span></span>';   /* uks: ilma TTU pildita – tähis + nool uksele */
       d.querySelector('span').textContent=siltTekst(kood,maja);
@@ -1533,7 +1532,6 @@ function joonistaSildid(){
         const {lx,ly,peal}=uksSildiKoht(a);
         d.style.left=(lx/SS.laius*100)+'%'; d.style.top=(ly/K*100)+'%';
         if(peal) d.classList.add('uksU');   /* paigutamata: kast ukse kohal, nool alla */
-        if(kp) d.classList.add('kp');
         d.dataset.uks='1';
         const o=document.createElement('div'); o.className='ots '+v+(akt?' aktiiv':''); o.dataset.kood=kood;
         o.style.left=d.dataset.tx+'%'; o.style.top=d.dataset.ty+'%';
@@ -1541,7 +1539,7 @@ function joonistaSildid(){
       }else if(a[8]){
         /* äpis paigutatud: märk seadme kohal, tähis kõrval (kleep) või vabalt noolega */
         d.dataset.ik='1';
-        const ik=document.createElement('div'); ik.className='ikoon '+v+(kp?' kp':'')+(akt?' aktiiv':''); ik.dataset.kood=kood;
+        const ik=document.createElement('div'); ik.className='ikoon '+v+(akt?' aktiiv':''); ik.dataset.kood=kood;
         if(a[10]!=null){
           /* „Liiguta noolega“: märk eemal, noole ots jääb seadme tegelikku kohta */
           ik.dataset.ox=d.dataset.tx; ik.dataset.oy=d.dataset.ty;
@@ -4417,10 +4415,10 @@ async function koostaPrindiSkeem(){
     /* märgid */
     L.margid.filter(e=>e.ikoon).forEach(e=>{ const I=e.ikoon;
       try{ doc.addImage(ikoonid[e.t],'PNG',I.x-I.s/2,I.y-I.s/2,I.s,I.s,'ik_'+e.t,'FAST'); }catch(er){}
-      if(e.kp){ doc.setDrawColor(31,111,214); doc.setLineWidth(Math.max(0.3,I.s*0.09)); doc.circle(I.x,I.y,I.s/2+I.s*0.14,'S'); } });
+ });
     /* tähised */
     L.margid.filter(e=>e.silt).forEach(e=>{ const c=PR_VARVID[e.v], s=e.silt;
-      if(e.kp && !e.ikoon){ const g=e.F*0.28; doc.setDrawColor(31,111,214); doc.setLineWidth(Math.max(0.25,e.F*0.16)); doc.roundedRect(s.x-g,s.y-g,s.w+2*g,s.h+2*g,e.F*0.5,e.F*0.5,'S'); }
+      if(e.kp){ const g=e.F*0.28; doc.setDrawColor(31,111,214); doc.setLineWidth(Math.max(0.25,e.F*0.16)); doc.roundedRect(s.x-g,s.y-g,s.w+2*g,s.h+2*g,e.F*0.5,e.F*0.5,'S'); }
       doc.setFillColor(...c.bg); doc.setDrawColor(...c.ar); doc.setLineWidth(Math.max(0.2,e.F*0.12));
       doc.roundedRect(s.x,s.y,s.w,s.h,e.F*0.3,e.F*0.3,'FD');
       doc.setFont('helvetica','bold'); doc.setFontSize(e.F/0.3528); doc.setTextColor(...c.tx);
