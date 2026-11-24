@@ -1,6 +1,6 @@
 /* Evakor – võrguta töö (service worker)
    Uue versiooni avaldamisel muuda VERSIOON, siis uuendavad telefonid vahemälu. */
-const VERSIOON = 'evakor-2026-11-24cb';
+const VERSIOON = 'evakor-2026-11-24cc';
 /* suured skeemifailid eraldi vahemälus – ei kustu äpi uuendamisel; uus versioon = uus ?v= */
 const SUURED = 'evakor-suured';
 const FAILID = [
