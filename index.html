@@ -540,7 +540,7 @@
 
     <button class="nupp skann" onclick="skanneeri()"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#2D3134" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2M18 18h2v2"/></svg>Skanneeri QR</button>
 
-    <div class="jalus">Evakor OÜ · versioon 25.11.2026-CD</div>
+    <div class="jalus">Evakor OÜ · versioon 25.11.2026-CE</div>
   </div>
 </div>
 
@@ -2995,6 +2995,13 @@ const skeemidValmis=(async()=>{
         /* pliiatsimärkmed (joonised) jäävad alles; märkide kohad tulevad uuest vaikeskeemist */
         if(rec.joonised){ rec.S=null; SKEEMI_KIRJED[rec.pk]=rec; skeemPane(rec).catch(()=>{}); } else skeemKustuta(rec.pk);
         return;
+      }
+      /* oma (muudetud) lehtedega salvestatud skeem jääb alles, kuid uue vaikeskeemi puuduvad märgid lisatakse ja ümbernimetatud koodid vahetatakse */
+      if(D && D.v && rec.S && rec.S.sildid && rec.S.v!==D.v && rec.lehed && !rec.pk.startsWith('LM13:') && rec.S.laius===D.laius && (rec.S.korgused||[]).length===(D.korgused||[]).length){
+        const vah=(typeof KOODI_VAHETUS!=='undefined' && KOODI_VAHETUS[rec.pk.split(':')[0]])||{};
+        for(const vana in vah) if(rec.S.sildid[vana] && !rec.S.sildid[vah[vana]]){ rec.S.sildid[vah[vana]]=rec.S.sildid[vana]; delete rec.S.sildid[vana]; }
+        for(const kood in D.sildid) if(!rec.S.sildid[kood]) rec.S.sildid[kood]=D.sildid[kood].slice();
+        rec.S.v=D.v; skeemPane(rec).catch(()=>{});
       }
       SKEEMI_KIRJED[rec.pk]=rec;
       if(rec.S) SKEEMI_SILDID[rec.pk]=rec.S;
